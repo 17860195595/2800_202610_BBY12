@@ -9,19 +9,34 @@
     "dev": "nodemon server.js"
   },
   "nodemonConfig": {
-    "ignore": ["public/**", "node_modules/**"]
+    "ignore": [
+      "public/**",
+      "node_modules/**"
+    ]
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "all": "^0.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
     "mongoose": "^8.7.0",
     "suncalc": "^1.9.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/17860195595/2800_202610_BBY12.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/17860195595/2800_202610_BBY12/issues"
+  },
+  "homepage": "https://github.com/17860195595/2800_202610_BBY12#readme"
 }

@@ -1,1 +1,8 @@
 @import url('./main.css');
+
+
+body
+{
+    margin: 0px;
+    padding: 0px;
+}
