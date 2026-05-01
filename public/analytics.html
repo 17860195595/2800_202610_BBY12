@@ -4,56 +4,70 @@
     basic structure of the page but i will add more later.
     -Adam
 -->
-<html lang = "en"> 
+<html lang="en">
     <head>
-        <title>Analytics Page</title>
-        <meta charset = "UTF-8">
-        <meta name = "viewport" content="width=device-width, initial-scale=1.0">
-        <link rel = "stylesheet" href = "css/component-styles/navbar.css">
-        <link rel = "stylesheet" href = "css/analytics.css">
+        <title>Analytics — ShadeSafe</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="css/style.css">
     </head>
 
-    <body>
-        <div class = page>
-            <div id="navbar"></div>
+    <body class="has-app-footer">
+        <div id="app-header"></div>
+        <div class="analytics-page">
+            <div class="analytics-layout">
 
-            <div class = sorting-banner>
+            <div class="sorting-banner">
 
-                <div class = "location-sort-container">
+                <div class="location-sort-container">
                     <p>Location:</p>
                     <button>↓</button>
                 </div>
 
 
-                <div class = "time-sort-container">
+                <div class="time-sort-container">
                     <p>Time:</p>
                     <button>↓</button>
                 </div>
             </div>
 
-            <div class = analytics-container>
-                <div class = example-item>analytic data 1</div>
-                <div class = example-item>analytic data 2</div>
-                <div class = example-item>analytic data 3</div>
-                <div class = example-item>analytic data 4</div>
-                <div class = example-item>analytic data 5</div>
-                <div class = example-item>analytic data 6</div>
-                <div class = example-item>analytic data 7</div>
-                <div class = example-item>analytic data 8</div>
-                <div class = example-item>analytic data 9</div>
-                <div class = example-item>analytic data 10</div>
-                <div class = example-item>analytic data 11</div>
-                <div class = example-item>analytic data 12</div>
-                <div class = example-item>analytic data 13</div>
-                <div class = example-item>analytic data 14</div> 
-                <div class = example-item>analytic data 15</div> 
-                <div class = example-item>analytic data 16</div>
-                <div class = example-item>analytic data 17</div>
-                <div class = example-item>analytic data 18</div>            
+            <div class="analytics-container">
+                <div class="analytics-example-item">analytic data 1</div>
+                <div class="analytics-example-item">analytic data 2</div>
+                <div class="analytics-example-item">analytic data 3</div>
+                <div class="analytics-example-item">analytic data 4</div>
+                <div class="analytics-example-item">analytic data 5</div>
+                <div class="analytics-example-item">analytic data 6</div>
+                <div class="analytics-example-item">analytic data 7</div>
+                <div class="analytics-example-item">analytic data 8</div>
+                <div class="analytics-example-item">analytic data 9</div>
+                <div class="analytics-example-item">analytic data 10</div>
+                <div class="analytics-example-item">analytic data 11</div>
+                <div class="analytics-example-item">analytic data 12</div>
+                <div class="analytics-example-item">analytic data 13</div>
+                <div class="analytics-example-item">analytic data 14</div> 
+                <div class="analytics-example-item">analytic data 15</div> 
+                <div class="analytics-example-item">analytic data 16</div>
+                <div class="analytics-example-item">analytic data 17</div>
+                <div class="analytics-example-item">analytic data 18</div>            
             </div>
 
+            </div>
         </div>
+        <div id="app-footer"></div>
 
-        <script src = "js/components/components.js"></script>
+        <script src="js/components/header.js"></script>
+        <script src="js/components/footer.js"></script>
+        <script>
+            loadAppHeader({ showBack: false });
+            loadAppFooter();
+        </script>
+        <script src="js/pages/analytics.js"></script>
     </body>
 </html>

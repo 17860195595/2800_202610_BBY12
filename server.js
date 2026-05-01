@@ -65,6 +65,14 @@ app.get("/analytics", (req, res) =>
     res.sendFile(path.join(__dirname, '/public/analytics.html'));
   });
 
+app.get("/about", (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/about.html"));
+});
+
+app.get("/alert", (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/alert.html"));
+});
+
 /**
  * Added by @Adam
  * 

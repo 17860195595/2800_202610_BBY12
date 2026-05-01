@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Project Template</title>
+    <title>Map — ShadeSafe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,9 +12,18 @@
     />
     <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body>
+  <body class="has-app-footer">
+    <div id="app-header"></div>
     <main class="page-shell">
-      <h1 class="page-title">Project Template</h1>
+      <h1 class="page-title">Map</h1>
     </main>
+    <div id="app-footer"></div>
+    <script src="js/components/header.js"></script>
+    <script src="js/components/footer.js"></script>
+    <script>
+      loadAppHeader({ showBack: false });
+      loadAppFooter();
+    </script>
+    <script src="js/pages/index.js"></script>
   </body>
 </html>

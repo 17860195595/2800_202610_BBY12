@@ -3,14 +3,13 @@
     <head>
         <title>Login Page</title>
         <meta charset="UTF-8">
-        <meta name="viewport" content ="width=-device-width", initial-scale="1.0">
-        <link rel="stylesheet" href="css/login.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="css/style.css">
     </head>
     <body>
+        <div id="app-header"></div>
 
-        <div class="logo-container">
-            <img src="images/logo.png" alt="ShadeSafe Logo" class="logo-img">
-        </div>
+        <div class="login-page">
 
         <div class="login-container">
 
@@ -18,8 +17,8 @@
                 <h1>Login</h1>
             </div>
 
-            <form class="login-form" action = "/main-page" method = 'post'>
-                
+            <form class="login-form" action="/main-page" method="post">
+
                 <input type="text" placeholder="Username" required>
                 <input type="password" placeholder="Password" required>
                 <button type="submit">Login</button>
@@ -33,5 +32,13 @@
             </div>
 
         </div>
+
+        </div>
+
+        <script src="js/components/header.js"></script>
+        <script>
+            loadAppHeader({ showBack: false });
+        </script>
+        <script src="js/pages/login.js"></script>
     </body>
 </html>
