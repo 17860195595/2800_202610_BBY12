@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -15,8 +15,24 @@
   <body class="has-app-footer">
     <div id="app-header"></div>
     <main class="page-shell">
-      <h1 class="page-title">Alerts</h1>
-      <p>Heat and UV alerts for your saved spots will show here.</p>
+      <section class="alerts-page">
+        <section class="alerts-shell">
+          <header class="alerts-header">
+            <h1 class="page-title">Alerts</h1>
+            <p>Heat and UV alerts for your saved spots will show here.</p>
+          </header>
+
+          <section class="alerts-card alerts-risk-card"></section>
+
+          <section class="alerts-card alerts-tips-card"></section>
+
+          <section class="alerts-card alerts-last-card"></section>
+
+          <aside class="alerts-note"></aside>
+
+          <button class="alerts-check-btn" type="button">Refresh</button>
+        </section>
+      </section>
     </main>
     <div id="app-footer"></div>
     <script src="js/components/header.js"></script>
