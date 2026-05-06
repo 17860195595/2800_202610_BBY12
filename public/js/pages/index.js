@@ -1,13 +1,18 @@
 /**
- * Map / home page entry for index.html.
+ * @file index.js — Map page bootstrap only.
  *
- * Stack:
- * - Leaflet for map controls and camera state.
- * - OpenStreetMap raster tiles (free tier; no API key). Follow OSM tile usage policy for production.
- * - Time-of-day control: Bootstrap .form-range in markup; hourly steps only.
+ * Responsibilities here:
+ *   - Create the Leaflet map and OSM tile layer
+ *   - Call createMapHeatController(map), addMockLocationMarkers, initMapTimeRail
+ *   - Subscribe maptimechange → syncMapSpotDetailPanel (detail text/chart only)
+ *   - Subscribe the range input directly → heat.refresh (reliable repaint; see mapHeat.js header)
+ *   - Escape closes the detail sheet
  *
- * Swapping providers:
- * - Google Maps / Mapbox: load their JS SDK, create the map instance their way, and remove the L.tileLayer block below.
+ * All feature logic: public/js/map/*.js (order in index.html matters).
+ *
+ * Note: Heat refresh is intentionally not inside the maptimechange handler to avoid double
+ * removeLayer/addLayer on the same tick; the slider’s input listener drives the heat layer alone.
+ * This split was clarified while stepping through event order with Claude-assisted review of the flow.
  */
 
 (function () {
@@ -40,40 +45,39 @@
     setTimeout(invalidate, 250);
     window.addEventListener("resize", invalidate);
 
+    var heat =
+        typeof createMapHeatController === "function"
+            ? createMapHeatController(map)
+            : null;
+
+    addMockLocationMarkers(map);
+
     initMapTimeRail(invalidate);
+
+    window.addEventListener("maptimechange", function () {
+        syncMapSpotDetailPanel();
+    });
+
+    var timeSliderEl = document.getElementById("map-time-slider");
+    if (timeSliderEl && heat) {
+        function refreshHeatFromSlider() {
+            var hv = parseInt(timeSliderEl.value, 10);
+            if (isNaN(hv)) {
+                hv = parseMapTimeHour();
+            }
+            heat.refresh(hv);
+        }
+        timeSliderEl.addEventListener("input", refreshHeatFromSlider);
+        timeSliderEl.addEventListener("change", refreshHeatFromSlider);
+    }
+
+    if (heat) {
+        heat.refresh(parseMapTimeHour());
+    }
+
+    document.addEventListener("keydown", function (ev) {
+        if (ev.key === "Escape") {
+            closeMapSpotDetail();
+        }
+    });
 })();
-
-/**
- * Hourly slider (0–23). Future heatmap: listen for "maptimechange" or read body.dataset.mapTimeHour.
- * @param {function} [onLayout]
- */
-function initMapTimeRail(onLayout) {
-    var slider = document.getElementById("map-time-slider");
-    var display = document.getElementById("map-time-rail-display");
-    if (!slider || !display) return;
-
-    function pad2(n) {
-        return n < 10 ? "0" + n : String(n);
-    }
-
-    function apply() {
-        var h = parseInt(slider.value, 10);
-        if (isNaN(h)) h = 0;
-        var label = pad2(h) + ":00";
-        display.value = label;
-        slider.setAttribute("aria-valuenow", String(h));
-        slider.setAttribute("aria-valuetext", label);
-        document.body.dataset.mapTimeHour = String(h);
-        document.body.dataset.mapTimeHm = label;
-        window.dispatchEvent(
-            new CustomEvent("maptimechange", {
-                detail: { hour: h, label: label, minutesFromMidnight: h * 60 },
-            })
-        );
-        if (typeof onLayout === "function") requestAnimationFrame(onLayout);
-    }
-
-    slider.addEventListener("input", apply);
-    slider.addEventListener("change", apply);
-    apply();
-}
