@@ -1,0 +1,44 @@
+/* Map home (index.html): full-width map under app shell */
+
+.map-page {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+}
+
+.map-page .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.map-page__canvas {
+  flex: 1 1 auto;
+  min-height: 16rem;
+  width: 100%;
+  z-index: 0;
+}
+
+@media (min-width: 48rem) {
+  .map-page__canvas {
+    min-height: 22rem;
+  }
+}
+
+/* Leaflet default tiles; keep attribution readable on green theme */
+.map-page .leaflet-control-attribution {
+  font-size: 0.65rem;
+  max-width: 70vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
