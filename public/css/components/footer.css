@@ -10,6 +10,43 @@ body.has-app-footer > :not(#app-header):not(#app-footer) {
   flex: 1 1 auto;
 }
 
+/* Map page: dock is not a flex-grow row (only main.map-page should grow) */
+body.has-bottom-dock.has-app-footer > .app-bottom-dock {
+  flex: 0 0 auto;
+}
+
+/*
+ * Stacked bottom UI (time rail + tabs): one fixed column, flush—no gap between rail and nav.
+ */
+body.has-bottom-dock .app-bottom-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding-bottom: env(safe-area-inset-bottom, 0rem);
+  pointer-events: none;
+}
+
+body.has-bottom-dock .app-bottom-dock > * {
+  pointer-events: auto;
+}
+
+body.has-bottom-dock .app-foot-nav {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  flex: 0 0 auto;
+  z-index: auto;
+  padding: var(--space-2) var(--space-2-5);
+  padding-bottom: var(--space-2);
+  box-shadow: none;
+}
+
 #app-footer {
   flex-shrink: 0;
   pointer-events: none;
@@ -24,7 +61,8 @@ body.has-app-footer > :not(#app-header):not(#app-footer) {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 40;
+  /* Above map / time rail so tabs stay tappable */
+  z-index: 1100;
   box-sizing: border-box;
   padding: var(--space-2) var(--space-2-5) calc(var(--space-2) + env(safe-area-inset-bottom, 0rem));
   background-color: rgb(121, 163, 105);
