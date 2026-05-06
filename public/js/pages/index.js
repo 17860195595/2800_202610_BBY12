@@ -6,7 +6,8 @@
  *   - Call createMapHeatController(map), addMockLocationMarkers, initMapTimeRail
  *   - Subscribe maptimechange → syncMapSpotDetailPanel (detail text/chart only)
  *   - Subscribe the range input directly → heat.refresh (reliable repaint; see mapHeat.js header)
- *   - Escape closes the detail sheet
+ *   - Escape closes the report modal first (if open), then the detail sheet
+ *   - initMapReport — floating Report button + feedback modal (no API yet)
  *
  * All feature logic: public/js/map/*.js (order in index.html matters).
  *
@@ -75,8 +76,15 @@
         heat.refresh(parseMapTimeHour());
     }
 
+    if (typeof initMapReport === "function") {
+        initMapReport();
+    }
+
     document.addEventListener("keydown", function (ev) {
         if (ev.key === "Escape") {
+            if (typeof closeMapReportIfOpen === "function" && closeMapReportIfOpen()) {
+                return;
+            }
             closeMapSpotDetail();
         }
     });

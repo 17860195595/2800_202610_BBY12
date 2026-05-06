@@ -348,6 +348,18 @@ function closeMapSpotDetail() {
 }
 
 /**
+ * Spot currently shown in the detail sheet, if the sheet is open.
+ * Used to pre-select a location in the report modal (see mapReport.js).
+ * @returns {Object|null}
+ */
+function getMapSpotDetailCurrentSpot() {
+    if (!mapSpotDetailUi.panel || mapSpotDetailUi.panel.hidden) {
+        return null;
+    }
+    return mapSpotDetailUi.currentSpot || null;
+}
+
+/**
  * Called on maptimechange (when the sheet may be closed) and when opening a spot.
  * No-ops if no spot or panel is hidden — avoids wasted DOM work.
  */
