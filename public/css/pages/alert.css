@@ -1,0 +1,352 @@
+/* Added by Eric Guo
+   Base styles for the Alerts page.
+
+   Attribution:
+   This CSS structure was assisted by ChatGPT to fix the issue where
+   the bottom button was being covered by the footer.
+   Modified and integrated by Eric Guo.
+   Source: https://chat.openai.com/ 
+*/
+.page-shell:has(.alerts-page) {
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+/* ── Page background ── */
+.alerts-page {
+  width: 100%;
+  min-height: 100%;
+  background: #f3f6f0;
+}
+
+/* ── Centered column (max 430px) ── */
+.alerts-shell {
+  width: min(100%, 26.875rem);
+  margin: 0 auto;
+}
+
+/* ── Shared card + note base styles ── */
+.alerts-header,
+.alerts-card,
+.alerts-note {
+  margin-bottom: 1rem;
+  padding: 1.5rem;
+  border: 0.0625rem solid #d8e2d3;
+  border-radius: 1.25rem;
+  background: white;
+}
+
+/* ── Individual card min-heights ── */
+.alerts-header {
+  min-height: 5rem;
+}
+.alerts-card {
+  min-height: 7.5rem;
+}
+.alerts-risk-card {
+  min-height: 11.25rem;
+}
+.alerts-tips-card {
+  min-height: 10rem;
+}
+.alerts-last-card {
+  min-height: 6.25rem;
+}
+.alerts-note {
+  min-height: 4.375rem;
+}
+
+/* ── Refresh button ── */
+.alerts-check-btn {
+  width: 100%;
+  height: 3.25rem;
+  border: none;
+  border-radius: 50%;
+  background-color: #0d4a2d;
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 2rem 0 0;
+}
+
+.alerts-check-btn:hover {
+  background-color: #0a3a23;
+}
+.alerts-check-btn:active {
+  transform: scale(0.98);
+}
+
+/* Added by Eric Guo
+   Risk card internals — all scoped to .alerts-risk-card
+   so nothing leaks to other cards or the shared header.
+*/
+
+/* ── Top row: label + title on the left, pill on the right ── */
+.alerts-risk-card .arc-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  margin-bottom: 0.75rem;
+}
+
+.alerts-risk-card .arc-label {
+  font-size: 0.75rem;
+  color: #5a7a65;
+  margin: 0 0 0.25rem;
+}
+
+.alerts-risk-card .arc-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #b91c1c;
+  margin: 0;
+  line-height: 1.1;
+}
+
+/* —— Risk level pill badge —— */
+.alerts-risk-card .arc-pill--high {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Description text ── */
+.alerts-risk-card .arc-desc {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+/* ── Meter placeholder ── */
+.alerts-risk-card .arc-meter {
+  width: 100%;
+  min-height: 6rem;
+  margin-bottom: 1rem;
+  background: #f3f6f0;
+  border-radius: 0.75rem;
+}
+
+/* ── Info grid: 3 equal columns ── */
+.alerts-risk-card .arc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+/* ——Each info cell stacks: icon, label and value —— */
+.alerts-risk-card .arc-grid-item {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  justify-items: center;
+  text-align: center;
+  gap: 0.1rem;
+  padding: 0.625rem 0.375rem;
+  background: #f3f6f0;
+  border-radius: 0.875rem;
+}
+
+.alerts-risk-card .arc-grid-item span {
+  font-size: 1rem;
+}
+.alerts-risk-card .arc-grid-item strong {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #374151;
+}
+.alerts-risk-card .arc-grid-item p {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin: 0;
+}
+.alerts-risk-card .arc-grid-item small {
+  font-size: 0.65rem;
+  color: #9ca3af;
+}
+/* Added by Eric Guo
+   Tips card — scoped to .alerts-tips-card.*/
+
+/* ── Section title ── */
+.alerts-tips-card .tips-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0d2b1a;
+  margin: 0 0 0.875rem;
+}
+
+/* ── Each tip row: emoji left, text right ── */
+.alerts-tips-card .tips-row {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: 0.625rem;
+  align-items: start;
+  margin-bottom: 0.75rem;
+}
+
+.alerts-tips-card .tips-row:last-child {
+  margin-bottom: 0;
+}
+
+.alerts-tips-card .tips-row strong {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0d2b1a;
+  margin-bottom: 0.125rem;
+}
+
+.alerts-tips-card .tips-row p {
+  font-size: 0.8125rem;
+  color: #5a7a65;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Added by Eric Guo
+   Last alert card — scoped to .alerts-last-card.*/
+
+/* —— Layout: text left, pill right —— */
+.alerts-last-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 1rem;
+}
+
+/* ── Left side text block ── */
+.alerts-last-card .last-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0d2b1a;
+  margin: 0 0 0.25rem;
+}
+
+.alerts-last-card .last-time {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.125rem;
+}
+
+.alerts-last-card .last-desc {
+  font-size: 0.8125rem;
+  color: #5a7a65;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Pill badge ── */
+.alerts-last-card .last-pill--high {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+/* Added by Eric Guo
+   Note aside — scoped to .alerts-note. */
+
+/* ── Layout: icon left, text right ── */
+.alerts-note {
+  display: grid;
+  grid-template-columns: 1rem 1fr;
+  gap: 0.625rem;
+  align-items: start;
+}
+
+.alerts-note > span {
+  font-size: 1rem;
+  color: #5a7a65;
+  margin-top: 0.05rem;
+}
+
+.alerts-note p {
+  font-size: 0.8125rem;
+  color: #5a7a65;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Refresh button — already in .alerts-check-btn base styles,
+   only adding font-family and flex centering here. */
+
+.alerts-check-btn {
+  width: 100%;
+  height: 3.25rem;
+  border: none;
+  border-radius: 3rem;
+  background-color: #0d4a2d;
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 2rem 0 6rem;
+}
+
+/* Added by Eric Guo
+   Icons — scoped to .alerts-icon and variants, 
+   used in alert cards and notes.*/
+
+.alerts-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.alerts-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.8;
+}
+
+.alerts-icon-large svg {
+  width: 24px;
+  height: 24px;
+}
+
+.alerts-icon-warning svg {
+  width: 28px;
+  height: 28px;
+  color: #f59e0b;
+}
+
+/* Added by Eric Guo
+   Popup styles — scoped to .alerts-popup, 
+   used for the welcome message on first visit.*/
+
+.alerts-popup {
+  background-color: white;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #d8e2d3;
+}
+.alerts-popup-title {
+  margin: 0 0 10px;
+  font-size: 20px;
+  color: #0d2b1a;
+}
+.alerts-popup-text {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #5a7a65;
+}
+.alerts-popup-button {
+  width: 100%;
+  border: none;
+  border-radius: 3rem;
+  padding: 12px;
+  background-color: #0d4a2d;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}

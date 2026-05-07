@@ -32,3 +32,10 @@ TBA
   intensity data can be rendered as a visual heat layer directly on the map.
   The goal of this prototype is to provide a runnable baseline for interaction, styling, and
   future integration with real backend/location data while core user features are still in progress.
+
+- Alerts page layout structure and footer overlap fix were assisted by ChatGPT and modified/integrated by Eric Guo.  
+  Source: https://chat.openai.com/
+
+- Alerts page icon integration using Lucide Icons was assisted by ChatGPT and modified/integrated by Eric Guo.  
+  ChatGPT: https://chat.openai.com/  
+  Lucide Icons: https://lucide.dev/
