@@ -20,3 +20,9 @@ Team Members:
 ## More details to come
 
 TBA
+
+## Attributions
+
+- weather API data collection adapted from open-meteo API call generator:  
+  https://open-meteo.com/en/docs
+  /services/weatherService.js

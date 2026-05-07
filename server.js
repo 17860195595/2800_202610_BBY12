@@ -4,6 +4,18 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
 
+/**
+ * Added by @Markus
+ * 
+ * gets all the services we need to compute the shade and risk scores for a location and time.
+ */
+const { computeShade } = require("./services/ShadeCalculationService.js");
+const { computeRisk } = require("./services/riskCalculationService.js");
+const { getSunPosition } = require("./services/sunAngleService.js");
+const { fetchWeatherData } = require("./services/weatherService.js");
+const { fetchTreeData } = require("./services/treeService.js");
+const { fetchBuildingData } = require("./services/buildingService.js");
+
 //setup express app
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -71,6 +83,93 @@ app.get("/about", (req, res) => {
 
 app.get("/alert", (req, res) => {
   res.sendFile(path.join(__dirname, "/public/alert.html"));
+});
+
+/**
+ * Added by @Markus
+ * 
+ * fetchs risk and general data from the various services files and returns it in a json format to be used by the frontend to display the data and analytics.
+ * the results look like this
+ * result[0] = tree data
+ * result[1] = building data
+ * result[2] = weather/risk data for oldest day
+ * result[last index] = weather/risk data for current day 
+ */
+app.get("/api/risk", async (req, res) => {
+  try {
+    const lat = req.query.lat;
+    const lng = req.query.lng;
+    const past_days = req.query.past_days || 0;
+
+    const weather = await fetchWeatherData(lat, lng, past_days);
+    const trees = await fetchTreeData(lat, lng, 50);
+    const buildings = await fetchBuildingData(lat, lng, 50);
+
+    const results = [];
+    const entriesPerDay = 8;
+
+    results.push(trees);
+    results.push(buildings);
+
+    for (let i = 0; i < weather.hourly.time.length; i++) {
+
+        const time = weather.hourly.time[i];
+
+        const sun = getSunPosition(lat, lng, time);
+
+        const shade = computeShade(trees, buildings, weather.hourly.is_day[i], sun);
+
+        const temp = weather.hourly.temperature_2m[i];
+        const uv = weather.hourly.uv_index[i];
+        const humidity = weather.hourly.relative_humidity_2m[i];
+        const directRadiation = weather.hourly.direct_radiation[i];
+
+        const risk = computeRisk(temp, directRadiation, uv, shade);
+
+        const entry = {
+            time,
+            shade,
+            risk,
+            temperature_C: weather.hourly.temperature_2m[i],
+            direct_radiation_Wm2: weather.hourly.direct_radiation[i],
+            uv_index: weather.hourly.uv_index[i],
+            humidity_percent: weather.hourly.relative_humidity_2m[i],
+            isday: weather.hourly.is_day[i],
+            windspeed_KM: weather.hourly.wind_speed_10m[i]
+        }
+
+        const dayIndex = Math.floor(i / entriesPerDay) + 2;
+
+        if (!results[dayIndex]) {
+         results[dayIndex] = [];
+        }
+
+        results[dayIndex].push(entry);
+      }
+    res.json(results);
+
+  } 
+  catch (error) {
+    console.error('Error fetching weather data:', error);
+    res.status(500).json({ error: 'Failed to fetch weather data' });
+  }
+});
+
+/**
+ * Added by @Markus
+ * 
+ * fetches all water fountain locations in the city of vancouver, there are around 250 water fountains total
+ * we can probably just save this data in the database but for now we will just have this fetch
+ */
+app.get("/api/fountains", async (req, res) => {
+  try {
+    const fountains = await fetchWaterFountainData();
+    res.json(fountains);
+  } 
+  catch (error) {
+    console.error('Error fetching water fountain data:', error);
+    res.status(500).json({ error: 'Failed to fetch water fountain data' });
+  }
 });
 
 /**
