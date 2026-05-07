@@ -149,6 +149,47 @@
       </div>
     </div>
 
+    <!-- Map onboarding: Bootstrap modal (mapOnboarding.css / mapOnboarding.js) -->
+    <div
+      class="modal fade map-onboarding-bs-modal"
+      id="map-onboarding-modal"
+      tabindex="-1"
+      aria-labelledby="map-onboarding-title"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content map-onboarding-modal-content">
+          <div class="modal-header flex-column align-items-stretch border-bottom-0 pb-0 position-relative pe-5">
+            <button
+              type="button"
+              class="btn-close position-absolute top-0 end-0 mt-2 me-2"
+              data-bs-dismiss="modal"
+              aria-label="Close tour"
+            ></button>
+            <p class="map-onboarding__eyebrow mb-2" id="map-onboarding-eyebrow"></p>
+            <h2 class="modal-title fs-5 map-onboarding-modal-title mb-0" id="map-onboarding-title"></h2>
+          </div>
+          <div class="modal-body pt-2">
+            <p class="map-onboarding__body mb-3 mb-md-4" id="map-onboarding-body"></p>
+            <div class="map-onboarding__dots" id="map-onboarding-dots" aria-hidden="true"></div>
+          </div>
+          <div class="modal-footer flex-wrap border-top-0 pt-0 gap-2">
+            <button type="button" class="btn btn-link map-onboarding__skip px-2" id="map-onboarding-skip">
+              Skip tour
+            </button>
+            <div class="d-flex flex-wrap gap-2 ms-auto">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="map-onboarding-prev">
+                Back
+              </button>
+              <button type="button" class="btn btn-primary btn-sm map-onboarding-next-btn" id="map-onboarding-next">
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
     <script>
@@ -174,6 +215,7 @@
     <script src="js/map/mapReport.js"></script>
     <script src="js/map/mapMarkers.js"></script>
     <script src="js/map/mapTimeRail.js"></script>
+    <script src="js/map/mapOnboarding.js"></script>
     <script src="js/pages/index.js"></script>
   </body>
 </html>

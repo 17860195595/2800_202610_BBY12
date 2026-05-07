@@ -6,7 +6,14 @@ body.has-app-footer {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0rem));
 }
 
-body.has-app-footer > :not(#app-header):not(#app-footer) {
+/*
+ * Only main (or similar) should grow. Overlays (#map-onboarding-modal, report modal, FAB) are body
+ * children too — giving them flex:1 breaks fixed descendants (tutorial card clipped / invisible).
+ */
+body.has-app-footer
+  > :not(#app-header):not(#app-footer):not(#map-onboarding-modal):not(#map-report-modal):not(
+    #map-report-fab
+  ) {
   flex: 1 1 auto;
 }
 

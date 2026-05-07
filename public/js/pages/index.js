@@ -8,6 +8,7 @@
  *   - Subscribe the range input directly → heat.refresh (reliable repaint; see mapHeat.js header)
  *   - Escape closes the report modal first (if open), then the detail sheet
  *   - initMapReport — floating Report button + feedback modal (no API yet)
+ *   - initMapOnboarding — first-visit tour (currently every visit; gate on user DB field later)
  *
  * All feature logic: public/js/map/*.js (order in index.html matters).
  *
@@ -80,8 +81,15 @@
         initMapReport();
     }
 
+    if (typeof initMapOnboarding === "function") {
+        initMapOnboarding({ delayMs: 550 });
+    }
+
     document.addEventListener("keydown", function (ev) {
         if (ev.key === "Escape") {
+            if (typeof closeMapOnboardingIfOpen === "function" && closeMapOnboardingIfOpen()) {
+                return;
+            }
             if (typeof closeMapReportIfOpen === "function" && closeMapReportIfOpen()) {
                 return;
             }
