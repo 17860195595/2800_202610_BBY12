@@ -3,6 +3,8 @@
   --bg-warm: #f6f3ee;
   --text: #14221a;
   --primary-green-dark: #0d4a2d;
+  /* Matches header / tab bar background */
+  --sage: rgb(121, 163, 105);
   --font: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   /* Spacing and radii (assuming 1rem = 16px at default browser settings) */

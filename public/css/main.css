@@ -4,6 +4,9 @@
 @import url('./components/navbar.css');
 @import url('./components/header.css');
 @import url('./components/footer.css');
+@import url('./components/mapReport.css');
+@import url('./components/mapOnboarding.css');
 @import url('./pages/login.css');
 @import url('./pages/signup.css');
 @import url('./pages/analytics.css');
+@import url('./pages/map.css');

@@ -1,0 +1,137 @@
+/* Map onboarding: dim backdrop < spotlight target < modal dialog (Bootstrap) */
+
+/*
+ * Time rail is inside .app-bottom-dock (1100); without this, its z-index cannot beat the modal
+ * backdrop (1238). Tabs use position:fixed and already stack globally; the rail does not.
+ */
+.app-bottom-dock.map-onboarding-dock--elevated {
+  z-index: 1239 !important;
+}
+
+#map-onboarding-modal.map-onboarding-bs-modal {
+  --bs-modal-zindex: 1240;
+}
+
+/* Backdrop below spotlight “hole” so highlighted UI stays visible */
+body:has(#map-onboarding-modal.show) > .modal-backdrop {
+  z-index: 1238;
+}
+
+/*
+ * Ring + vignette. Do not set position: relative here — it would override position:fixed on
+ * .app-foot-nav / #map-report-fab and break layout. z-index still applies to positioned nodes.
+ */
+.map-onboarding-spotlight {
+  z-index: 1239 !important;
+  outline: 0.1875rem solid #fff;
+  outline-offset: 0.25rem;
+  border-radius: var(--radius-md, 0.5rem);
+  box-shadow: 0 0 0 200vmax rgba(13, 74, 45, 0.48);
+}
+
+/* FAB / small controls: slightly stronger ring so the “hole” matches the tap target */
+.map-onboarding-spotlight.map-onboarding-spotlight--compact {
+  outline-width: 0.25rem;
+  outline-offset: 0.45rem;
+  border-radius: 999px;
+}
+
+/* Dialog is positioned with JS so it usually does not cover the spotlight */
+#map-onboarding-modal.modal.show .modal-dialog.map-onboarding-modal-dialog.map-onboarding-dialog--placed {
+  margin: 0;
+  position: fixed;
+  right: auto;
+}
+
+.map-onboarding-modal-content {
+  position: relative;
+  font-family: var(--font);
+  color: var(--text);
+  background: linear-gradient(180deg, #fbfcfb 0%, var(--bg) 55%, #e8efe9 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(121, 163, 105, 0.24);
+  box-shadow: 0 1rem 2.5rem rgba(13, 74, 45, 0.16), 0 0.25rem 0.75rem rgba(13, 74, 45, 0.08);
+  overflow: hidden;
+}
+
+.map-onboarding-modal-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.1875rem;
+  background: linear-gradient(90deg, rgba(121, 163, 105, 0.9) 0%, var(--primary-green-dark) 100%);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  pointer-events: none;
+}
+
+.map-onboarding-modal-title {
+  letter-spacing: -0.02em;
+  color: var(--primary-green-dark);
+}
+
+.map-onboarding__eyebrow {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(20, 34, 26, 0.48);
+}
+
+.map-onboarding__body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgba(20, 34, 26, 0.82);
+}
+
+.map-onboarding__dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  justify-content: center;
+}
+
+.map-onboarding__dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: rgba(121, 163, 105, 0.35);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.map-onboarding__dot.is-active {
+  background: var(--primary-green-dark);
+  transform: scale(1.2);
+}
+
+.map-onboarding__skip {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(20, 34, 26, 0.55);
+  text-decoration: none;
+}
+
+.map-onboarding__skip:hover {
+  color: var(--primary-green-dark);
+}
+
+#map-onboarding-modal .map-onboarding-next-btn.btn-primary {
+  --bs-btn-bg: var(--primary-green-dark);
+  --bs-btn-border-color: var(--primary-green-dark);
+  --bs-btn-hover-bg: #0a3d24;
+  --bs-btn-hover-border-color: #0a3d24;
+  font-weight: 600;
+}
+
+@media (min-width: 48rem) {
+  #map-onboarding-modal .modal-dialog.map-onboarding-modal-dialog {
+    max-width: 26rem;
+  }
+
+  .map-onboarding-modal-title {
+    font-size: 1.1875rem;
+  }
+}
