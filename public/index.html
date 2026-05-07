@@ -149,15 +149,17 @@
       </div>
     </div>
 
-    <!-- Map onboarding: Bootstrap modal (mapOnboarding.css / mapOnboarding.js) -->
+    <!-- Map onboarding: Bootstrap modal + spotlight on targets (mapOnboarding.js positions dialog) -->
     <div
       class="modal fade map-onboarding-bs-modal"
       id="map-onboarding-modal"
       tabindex="-1"
       aria-labelledby="map-onboarding-title"
       aria-hidden="true"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
     >
-      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-dialog modal-dialog-scrollable map-onboarding-modal-dialog">
         <div class="modal-content map-onboarding-modal-content">
           <div class="modal-header flex-column align-items-stretch border-bottom-0 pb-0 position-relative pe-5">
             <button

@@ -1,11 +1,46 @@
-/* Map onboarding tour — Bootstrap modal + ShadeSafe theme (above bottom nav 1100) */
+/* Map onboarding: dim backdrop < spotlight target < modal dialog (Bootstrap) */
+
+/*
+ * Time rail is inside .app-bottom-dock (1100); without this, its z-index cannot beat the modal
+ * backdrop (1238). Tabs use position:fixed and already stack globally; the rail does not.
+ */
+.app-bottom-dock.map-onboarding-dock--elevated {
+  z-index: 1239 !important;
+}
 
 #map-onboarding-modal.map-onboarding-bs-modal {
   --bs-modal-zindex: 1240;
 }
 
+/* Backdrop below spotlight “hole” so highlighted UI stays visible */
 body:has(#map-onboarding-modal.show) > .modal-backdrop {
-  z-index: 1239;
+  z-index: 1238;
+}
+
+/*
+ * Ring + vignette. Do not set position: relative here — it would override position:fixed on
+ * .app-foot-nav / #map-report-fab and break layout. z-index still applies to positioned nodes.
+ */
+.map-onboarding-spotlight {
+  z-index: 1239 !important;
+  outline: 0.1875rem solid #fff;
+  outline-offset: 0.25rem;
+  border-radius: var(--radius-md, 0.5rem);
+  box-shadow: 0 0 0 200vmax rgba(13, 74, 45, 0.48);
+}
+
+/* FAB / small controls: slightly stronger ring so the “hole” matches the tap target */
+.map-onboarding-spotlight.map-onboarding-spotlight--compact {
+  outline-width: 0.25rem;
+  outline-offset: 0.45rem;
+  border-radius: 999px;
+}
+
+/* Dialog is positioned with JS so it usually does not cover the spotlight */
+#map-onboarding-modal.modal.show .modal-dialog.map-onboarding-modal-dialog.map-onboarding-dialog--placed {
+  margin: 0;
+  position: fixed;
+  right: auto;
 }
 
 .map-onboarding-modal-content {
@@ -92,7 +127,7 @@ body:has(#map-onboarding-modal.show) > .modal-backdrop {
 }
 
 @media (min-width: 48rem) {
-  #map-onboarding-modal .modal-dialog {
+  #map-onboarding-modal .modal-dialog.map-onboarding-modal-dialog {
     max-width: 26rem;
   }
 
