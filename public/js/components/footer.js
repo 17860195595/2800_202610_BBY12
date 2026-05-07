@@ -26,8 +26,8 @@ function footNavIconAnalytics() {
     return '<svg class="app-foot-nav__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>';
 }
 
-function footNavIconAbout() {
-    return '<svg class="app-foot-nav__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>';
+function footNavIconMe() {
+    return '<svg class="app-foot-nav__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>';
 }
 
 function footNavIconAlert() {
@@ -44,7 +44,7 @@ function resolveFootNavActiveKey(options) {
     const path = (window.location.pathname || "").toLowerCase();
     const file = (path.split("/").pop() || "").toLowerCase();
     if (path.includes("analytics") || file === "analytics.html") return "analytics";
-    if (path.includes("about") || file === "about.html") return "about";
+    if (path.includes("me") || file === "me.html") return "me";
     if (path.includes("alert") || file === "alert.html") return "alert";
     return "map";
 }
@@ -54,7 +54,7 @@ function resolveFootNavActiveKey(options) {
  *
  * @param {object} [options]
  * @param {string} [options.mountId='app-footer']
- * @param {'map'|'analytics'|'about'|'alert'} [options.activeKey] — omit to infer from the URL
+ * @param {'map'|'analytics'|'me'|'alert'} [options.activeKey] — omit to infer from the URL
  */
 function loadAppFooter(options) {
     const opts = options || {};
@@ -67,8 +67,8 @@ function loadAppFooter(options) {
     const items = [
         { key: "map", href: "/", label: "Map", icon: footNavIconMap() },
         { key: "analytics", href: "/analytics", label: "Analytics", icon: footNavIconAnalytics() },
-        { key: "about", href: "/about", label: "About", icon: footNavIconAbout() },
         { key: "alert", href: "/alert", label: "Alerts", icon: footNavIconAlert() },
+        { key: "me", href: "/me", label: "Me", icon: footNavIconMe() },
     ];
 
     const links = items

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Profile — BBY-12</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/pages/subpage.css" />
+    <link rel="stylesheet" href="css/pages/profile.css" />
+  </head>
+
+  <body class="sub-page">
+    <div id="app-header"></div>
+
+    <main class="sub-page-shell profile-page">
+      <a href="/me" class="back-link">← Back to Me</a>
+
+      <h1 class="sub-page-title">My Profile</h1>
+      <p class="sub-page-subtitle">
+        Update your basic information and outdoor comfort preferences.
+      </p>
+
+      <section class="profile-card">
+        <div class="profile-avatar-large">🌳</div>
+
+        <div>
+          <h2>Guest User</h2>
+          <p>ShadeSafe Vancouver User</p>
+        </div>
+      </section>
+
+      <section class="sub-card profile-form-card">
+        <label class="form-field">
+          <span>Name</span>
+          <input type="text" value="Guest User" />
+        </label>
+
+        <label class="form-field">
+          <span>Role</span>
+          <input type="text" value="Developer" />
+        </label>
+
+        <label class="form-field">
+          <span>Preferred Area</span>
+          <select>
+            <option selected>Vancouver</option>
+            <option>Burnaby</option>
+            <option>Richmond</option>
+            <option>Surrey</option>
+          </select>
+        </label>
+
+        <label class="form-field">
+          <span>Heat Sensitivity</span>
+          <select>
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+          </select>
+        </label>
+
+        <button type="button" class="primary-btn">
+          Save Profile
+        </button>
+      </section>
+    </main>
+
+    <script src="js/components/header.js"></script>
+    <script>
+      loadAppHeader({ showBack: false });
+    </script>
+
+    <script src="js/pages/profile.js"></script>
+  </body>
+</html>

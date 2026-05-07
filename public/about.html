@@ -3,36 +3,79 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>About — BBY-12</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
       rel="stylesheet"
     />
+
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/pages/subpage.css" />
+    <link rel="stylesheet" href="css/pages/about.css" />
   </head>
-  <body class="has-app-footer">
+
+  <body class="sub-page">
     <div id="app-header"></div>
-    <main class="page-shell">
-      <h1 class="page-title">Team BBY-12</h1>
-      <p>Team Name: BBY-12</p>
-      <p>Team Members:</p>
-      <ul>
-        <li>Jiahao Zhu</li>
-        <li>Eric Guo</li>
-        <li>Edward Liang</li>
-        <li>Adam Sehboub</li>
-        <li>Markus Serban</li>
-      </ul>
+
+    <main class="sub-page-shell about-page">
+      <a href="/me" class="back-link">← Back to Me</a>
+
+      <section class="about-hero">
+        <h1>About ShadeSafe Vancouver</h1>
+        <p>
+          ShadeSafe Vancouver helps people find safer, cooler, and more comfortable
+          outdoor areas by providing shade-related information for Vancouver.
+        </p>
+      </section>
+
+      <section class="sub-card">
+        <h2>Our Mission</h2>
+        <p>
+          Our goal is to make outdoor planning easier during sunny or hot days.
+          ShadeSafe Vancouver helps users understand where shade may be available
+          and make better decisions before going outside.
+        </p>
+      </section>
+
+      <section class="sub-card">
+        <h2>Who Is This For?</h2>
+        <p>
+          This app is designed for students, commuters, families, outdoor workers,
+          and anyone who wants to plan safer outdoor activities in the city.
+        </p>
+      </section>
+
+      <section class="sub-card">
+        <h2>Data Note</h2>
+        <p>
+          ShadeSafe Vancouver is a student project. The information shown in this
+          app is for planning support and should not replace official weather,
+          health, or emergency alerts.
+        </p>
+      </section>
+
+      <section class="sub-card">
+        <h2>Team BBY-12</h2>
+        <ul class="team-list">
+          <li>Jiahao Zhu</li>
+          <li>Eric Guo</li>
+          <li>Edward Liang</li>
+          <li>Adam Sehboub</li>
+          <li>Markus Serban</li>
+        </ul>
+      </section>
     </main>
-    <div id="app-footer"></div>
+
     <script src="js/components/header.js"></script>
-    <script src="js/components/footer.js"></script>
     <script>
       loadAppHeader({ showBack: false });
-      loadAppFooter();
     </script>
+
     <script src="js/pages/about.js"></script>
   </body>
 </html>

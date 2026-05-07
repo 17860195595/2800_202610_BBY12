@@ -73,6 +73,18 @@ app.get("/alert", (req, res) => {
   res.sendFile(path.join(__dirname, "/public/alert.html"));
 });
 
+app.get("/me", (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/me.html"));
+});
+
+app.get("/settings", (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/settings.html"));
+});
+
+app.get("/profile", (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/profile.html"));
+});
+
 /**
  * Added by @Adam
  * 
