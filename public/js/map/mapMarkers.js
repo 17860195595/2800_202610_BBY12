@@ -8,11 +8,13 @@
  *
  * Note on divIcon: iconAnchor is bottom-center of the pin so the tip sits on the coordinates;
  * Leaflet docs + Claude-assisted sanity check on anchor vs viewBox size.
+ * @author Jiahao
  */
 
 /**
  * Build a DivIcon with inline SVG (no extra HTTP request). className clears default leaflet-div-icon border.
  * @returns {L.DivIcon}
+ * @author Jiahao
  */
 function createSpotDivIcon() {
     var w = 36;
@@ -41,6 +43,7 @@ function createSpotDivIcon() {
  * Add one marker per valid mock row; reuse the same icon instance for performance.
  * IIFE in the loop captures spot `s` for the click handler (classic JS closure fix).
  * @param {L.Map} map
+ * @author Jiahao
  */
 function addMockLocationMarkers(map) {
     var rows =

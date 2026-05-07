@@ -15,78 +15,134 @@
  * Note: Heat refresh is intentionally not inside the maptimechange handler to avoid double
  * removeLayer/addLayer on the same tick; the slider’s input listener drives the heat layer alone.
  * This split was clarified while stepping through event order with Claude-assisted review of the flow.
+ * @author Jiahao
  */
 
 (function () {
     "use strict";
 
-    var el = document.getElementById("map");
-    if (!el || typeof L === "undefined") {
-        return;
+    var MAP_CENTER = [49.2827, -123.1207];
+    var INITIAL_ZOOM = 12;
+    var ONBOARDING_DELAY_MS = 550;
+
+    /**
+     * Build the Leaflet map instance for the map page.
+     * @param {HTMLElement} mountEl
+     * @returns {L.Map}
+     * @author Jiahao
+     */
+    function createMapInstance(mountEl) {
+        return L.map(mountEl, {
+            zoomControl: true,
+            scrollWheelZoom: true,
+        }).setView(MAP_CENTER, INITIAL_ZOOM);
     }
 
-    var vancouver = [49.2827, -123.1207];
-    var initialZoom = 12;
-
-    var map = L.map(el, {
-        zoomControl: true,
-        scrollWheelZoom: true,
-    }).setView(vancouver, initialZoom);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-    }).addTo(map);
-
-    function invalidate() {
-        map.invalidateSize();
+    /**
+     * Attach OpenStreetMap base tiles to the given map.
+     * @param {L.Map} map
+     * @author Jiahao
+     */
+    function attachBaseTiles(map) {
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+        }).addTo(map);
     }
 
-    requestAnimationFrame(invalidate);
-    setTimeout(invalidate, 250);
-    window.addEventListener("resize", invalidate);
+    /**
+     * Create a size invalidation callback and bind it to initial/reflow events.
+     * @param {L.Map} map
+     * @returns {function}
+     * @author Jiahao
+     */
+    function bindMapInvalidation(map) {
+        function invalidate() {
+            map.invalidateSize();
+        }
+        requestAnimationFrame(invalidate);
+        setTimeout(invalidate, 250);
+        window.addEventListener("resize", invalidate);
+        return invalidate;
+    }
 
-    var heat =
-        typeof createMapHeatController === "function"
+    /**
+     * Bind detail panel updates to maptimechange.
+     * @author Jiahao
+     */
+    function bindDetailSyncOnTimeChange() {
+        window.addEventListener("maptimechange", function () {
+            syncMapSpotDetailPanel();
+        });
+    }
+
+    /**
+     * Build heat controller if the factory is available.
+     * @param {L.Map} map
+     * @returns {Object|null}
+     * @author Jiahao
+     */
+    function createHeatController(map) {
+        return typeof createMapHeatController === "function"
             ? createMapHeatController(map)
             : null;
+    }
 
-    addMockLocationMarkers(map);
-
-    initMapTimeRail(invalidate);
-
-    window.addEventListener("maptimechange", function () {
-        syncMapSpotDetailPanel();
-    });
-
-    var timeSliderEl = document.getElementById("map-time-slider");
-    if (timeSliderEl && heat) {
-        function refreshHeatFromSlider() {
-            var hv = parseInt(timeSliderEl.value, 10);
-            if (isNaN(hv)) {
-                hv = parseMapTimeHour();
-            }
-            heat.refresh(hv);
+    /**
+     * Read the hour from slider safely; fallback to dataset hour.
+     * @param {HTMLInputElement} sliderEl
+     * @returns {number}
+     * @author Jiahao
+     */
+    function parseHourFromSlider(sliderEl) {
+        var hour = parseInt(sliderEl.value, 10);
+        if (isNaN(hour)) {
+            hour = parseMapTimeHour();
         }
-        timeSliderEl.addEventListener("input", refreshHeatFromSlider);
-        timeSliderEl.addEventListener("change", refreshHeatFromSlider);
+        return hour;
     }
 
-    if (heat) {
-        heat.refresh(parseMapTimeHour());
+    /**
+     * Keep heat layer in sync with slider events.
+     * @param {Object|null} heatController
+     * @author Jiahao
+     */
+    function bindHeatRefreshToSlider(heatController) {
+        var sliderEl = document.getElementById("map-time-slider");
+        if (!sliderEl || !heatController) {
+            return;
+        }
+        function refreshHeatFromSlider() {
+            heatController.refresh(parseHourFromSlider(sliderEl));
+        }
+        sliderEl.addEventListener("input", refreshHeatFromSlider);
+        sliderEl.addEventListener("change", refreshHeatFromSlider);
     }
 
-    if (typeof initMapReport === "function") {
-        initMapReport();
+    /**
+     * Initialize optional map-page overlays/widgets.
+     * @author Jiahao
+     */
+    function initOptionalUiModules() {
+        if (typeof initMapReport === "function") {
+            initMapReport();
+        }
+        if (typeof initMapOnboarding === "function") {
+            initMapOnboarding({ delayMs: ONBOARDING_DELAY_MS });
+        }
     }
 
-    if (typeof initMapOnboarding === "function") {
-        initMapOnboarding({ delayMs: 550 });
-    }
-
-    document.addEventListener("keydown", function (ev) {
-        if (ev.key === "Escape") {
+    /**
+     * Global Escape behavior priority:
+     * 1) onboarding modal, 2) report modal, 3) spot detail panel.
+     * @author Jiahao
+     */
+    function bindGlobalEscapeHandlers() {
+        document.addEventListener("keydown", function (ev) {
+            if (ev.key !== "Escape") {
+                return;
+            }
             if (typeof closeMapOnboardingIfOpen === "function" && closeMapOnboardingIfOpen()) {
                 return;
             }
@@ -94,6 +150,27 @@
                 return;
             }
             closeMapSpotDetail();
-        }
-    });
+        });
+    }
+
+    var mapEl = document.getElementById("map");
+    if (!mapEl || typeof L === "undefined") {
+        return;
+    }
+
+    var map = createMapInstance(mapEl);
+    attachBaseTiles(map);
+    var invalidate = bindMapInvalidation(map);
+
+    var heat = createHeatController(map);
+    addMockLocationMarkers(map);
+    initMapTimeRail(invalidate);
+    bindDetailSyncOnTimeChange();
+    bindHeatRefreshToSlider(heat);
+    if (heat) {
+        heat.refresh(parseMapTimeHour());
+    }
+
+    initOptionalUiModules();
+    bindGlobalEscapeHandlers();
 })();

@@ -12,21 +12,33 @@
  *   overlays measure correctly on mobile / after font load.
  *
  * @param {function} [onLayout] Optional callback, e.g. map.invalidateSize bound from index.js
+ * @author Jiahao
  */
 
 /**
  * Bind the map time slider and mirror state to dataset + maptimechange.
  * @param {function} [onLayout]
+ * @author Jiahao
  */
 function initMapTimeRail(onLayout) {
     var slider = document.getElementById("map-time-slider");
     var display = document.getElementById("map-time-rail-display");
     if (!slider || !display) return;
 
+    /**
+     * Format an hour as two digits.
+     * @param {number} n
+     * @returns {string}
+     * @author Jiahao
+     */
     function pad2(n) {
         return n < 10 ? "0" + n : String(n);
     }
 
+    /**
+     * Apply slider value to UI state and notify listeners.
+     * @author Jiahao
+     */
     function apply() {
         var h = parseInt(slider.value, 10);
         if (isNaN(h)) h = 0;

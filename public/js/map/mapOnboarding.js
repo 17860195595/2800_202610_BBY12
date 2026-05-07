@@ -4,6 +4,7 @@
  * Dialog position is computed so it usually sits beside the highlight, not on top of it.
  *
  * TODO: shouldRunMapOnboarding() — gate on user DB flag when auth exists.
+ * @author Jiahao
  */
 
 /** @typedef {{ eyebrow: string, title: string, body: string, targetSelector?: string, scrollTarget?: boolean }} MapOnboardingStep */
@@ -49,8 +50,8 @@ var MAP_ONBOARDING_STEPS = [
         eyebrow: "Navigation",
         title: "More in the app",
         body: "Use these tabs for Analytics, About, and Alerts. You're ready — enjoy a cooler walk.",
-        /* #app-footer wraps a position:fixed nav — its box height is wrong; highlight the real bar */
-        targetSelector: ".app-foot-nav",
+        /* Highlight the actual interactive tabs row (clearer than the whole fixed nav wrapper). */
+        targetSelector: ".app-foot-nav__tabs",
         scrollTarget: true,
     },
 ];
@@ -75,15 +76,26 @@ var mapOnboardingLayoutTimer = null;
 
 /**
  * @returns {boolean}
+ * @author Jiahao
  */
 function shouldRunMapOnboarding() {
     return true;
 }
 
+/**
+ * Return onboarding modal root node.
+ * @returns {HTMLElement|null}
+ * @author Jiahao
+ */
 function mapOnboardingModalEl() {
     return document.getElementById("map-onboarding-modal");
 }
 
+/**
+ * Return Bootstrap modal instance for onboarding.
+ * @returns {Object|null}
+ * @author Jiahao
+ */
 function mapOnboardingGetModal() {
     var el = mapOnboardingModalEl();
     if (!el || typeof bootstrap === "undefined" || !bootstrap.Modal) {
@@ -92,6 +104,11 @@ function mapOnboardingGetModal() {
     return bootstrap.Modal.getOrCreateInstance(el);
 }
 
+/**
+ * Return Bootstrap dialog element used for dynamic positioning.
+ * @returns {HTMLElement|null}
+ * @author Jiahao
+ */
 function mapOnboardingDialogEl() {
     var modal = mapOnboardingModalEl();
     return modal ? modal.querySelector(".map-onboarding-modal-dialog") : null;
@@ -101,16 +118,23 @@ function mapOnboardingDialogEl() {
  * #map-time-rail lives inside .app-bottom-dock (z-index 1100). Children cannot paint above the
  * tour backdrop (1238). Temporarily lift the dock for that step only.
  * @param {HTMLElement|null} highlightEl
+ * @author Jiahao
  */
 function mapOnboardingSyncDockElevation(highlightEl) {
     var dock = document.querySelector(".app-bottom-dock");
     if (!dock) {
         return;
     }
-    var elevate = !!(highlightEl && highlightEl.id === "map-time-rail");
+    var elevate =
+        !!highlightEl &&
+        (highlightEl.id === "map-time-rail" || !!highlightEl.closest(".app-bottom-dock"));
     dock.classList.toggle("map-onboarding-dock--elevated", elevate);
 }
 
+/**
+ * Remove all spotlight classes from previous target.
+ * @author Jiahao
+ */
 function mapOnboardingClearSpotlight() {
     if (mapOnboardingSpotlightEl) {
         mapOnboardingSpotlightEl.classList.remove(
@@ -126,6 +150,7 @@ function mapOnboardingClearSpotlight() {
  * Resolve the DOM node to highlight (some ids are wrappers; fixed children need direct query).
  * @param {MapOnboardingStep|null} step
  * @returns {HTMLElement|null}
+ * @author Jiahao
  */
 function mapOnboardingResolveTarget(step) {
     if (!step || !step.targetSelector) {
@@ -145,6 +170,11 @@ function mapOnboardingResolveTarget(step) {
     return el;
 }
 
+/**
+ * Apply spotlight styles to the current step target and optionally scroll it into view.
+ * @param {MapOnboardingStep|null} step
+ * @author Jiahao
+ */
 function mapOnboardingApplySpotlight(step) {
     mapOnboardingClearSpotlight();
     if (!step) {
@@ -166,6 +196,11 @@ function mapOnboardingApplySpotlight(step) {
     mapOnboardingSyncDockElevation(el);
 }
 
+/**
+ * Parse CSS dock padding variable to pixel value.
+ * @returns {number}
+ * @author Jiahao
+ */
 function mapOnboardingDockPadPx() {
     var raw = getComputedStyle(document.body).getPropertyValue("--app-bottom-dock-pad").trim();
     if (!raw) {
@@ -184,6 +219,7 @@ function mapOnboardingDockPadPx() {
 
 /**
  * Place the modal dialog near the spotlight so the highlighted control stays visible.
+ * @author Jiahao
  */
 function mapOnboardingPositionDialog() {
     var dialog = mapOnboardingDialogEl();
@@ -245,6 +281,10 @@ function mapOnboardingPositionDialog() {
     }
 }
 
+/**
+ * Debounce dialog reposition work.
+ * @author Jiahao
+ */
 function mapOnboardingScheduleLayout() {
     if (mapOnboardingLayoutTimer != null) {
         window.clearTimeout(mapOnboardingLayoutTimer);
@@ -257,6 +297,7 @@ function mapOnboardingScheduleLayout() {
 
 /**
  * Leaflet / scroll need a tick to settle before getBoundingClientRect matches the visible UI.
+ * @author Jiahao
  */
 function mapOnboardingReflowThenLayout() {
     window.dispatchEvent(new Event("resize"));
@@ -273,6 +314,12 @@ function mapOnboardingReflowThenLayout() {
     }, 380);
 }
 
+/**
+ * Render step indicator dots.
+ * @param {number} total
+ * @param {number} activeIndex
+ * @author Jiahao
+ */
 function mapOnboardingRenderDots(total, activeIndex) {
     var host = document.getElementById("map-onboarding-dots");
     if (!host) {
@@ -286,6 +333,10 @@ function mapOnboardingRenderDots(total, activeIndex) {
     }
 }
 
+/**
+ * Render current onboarding step text, controls, and spotlight.
+ * @author Jiahao
+ */
 function mapOnboardingRenderStep() {
     var step = MAP_ONBOARDING_STEPS[mapOnboardingStepIndex];
     if (!step) {
@@ -317,6 +368,10 @@ function mapOnboardingRenderStep() {
     mapOnboardingReflowThenLayout();
 }
 
+/**
+ * Open onboarding modal from the first step.
+ * @author Jiahao
+ */
 function mapOnboardingShow() {
     var modal = mapOnboardingGetModal();
     if (!modal) {
@@ -327,6 +382,10 @@ function mapOnboardingShow() {
     modal.show();
 }
 
+/**
+ * Close onboarding and reset local state.
+ * @author Jiahao
+ */
 function mapOnboardingFinish() {
     var modal = mapOnboardingGetModal();
     if (modal) {
@@ -342,6 +401,10 @@ function mapOnboardingFinish() {
     }
 }
 
+/**
+ * Go to next onboarding step or finish on last step.
+ * @author Jiahao
+ */
 function mapOnboardingNext() {
     if (mapOnboardingStepIndex >= MAP_ONBOARDING_STEPS.length - 1) {
         mapOnboardingFinish();
@@ -351,6 +414,10 @@ function mapOnboardingNext() {
     mapOnboardingRenderStep();
 }
 
+/**
+ * Go back one onboarding step.
+ * @author Jiahao
+ */
 function mapOnboardingPrev() {
     if (mapOnboardingStepIndex <= 0) {
         return;
@@ -361,6 +428,7 @@ function mapOnboardingPrev() {
 
 /**
  * @returns {boolean}
+ * @author Jiahao
  */
 function closeMapOnboardingIfOpen() {
     var el = mapOnboardingModalEl();
@@ -371,6 +439,10 @@ function closeMapOnboardingIfOpen() {
     return true;
 }
 
+/**
+ * Reposition dialog when viewport changes.
+ * @author Jiahao
+ */
 function mapOnboardingOnResize() {
     if (!mapOnboardingActive) {
         return;
@@ -381,6 +453,7 @@ function mapOnboardingOnResize() {
 /**
  * @param {object} [options]
  * @param {number} [options.delayMs]
+ * @author Jiahao
  */
 function initMapOnboarding(options) {
     var opts = options || {};

@@ -1,5 +1,6 @@
 /**
  * Navbar — inject into `#navbar` if present (legacy).
+ * @author Jiahao
  */
 function loadNavbar() {
     const mount = document.getElementById("navbar");
@@ -30,6 +31,7 @@ function loadNavbar() {
 /**
  * Escape text for HTML text nodes.
  * @param {string} value
+ * @author Jiahao
  */
 function escapeHtml(value) {
     return String(value)
@@ -42,6 +44,7 @@ function escapeHtml(value) {
 /**
  * Escape for use inside double-quoted attributes.
  * @param {string} value
+ * @author Jiahao
  */
 function escapeAttr(value) {
     return String(value)
@@ -62,6 +65,7 @@ function escapeAttr(value) {
  * @param {string} [options.logoSrc='images/header_logo.png'] — empty string to hide logo
  * @param {string} [options.logoAlt='ShadeSafe Vancouver']
  * @param {string} [options.title] — optional title under / beside branding
+ * @author Jiahao
  */
 function loadAppHeader(options) {
     const opts = options || {};

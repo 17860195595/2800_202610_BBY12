@@ -10,6 +10,7 @@
  *   - Bar click → time slider: programmatic value change does not fire "input" natively; we
  *     dispatch input + change with bubbles:true so initMapTimeRail and the heat refresh listener run.
  *   - UV row uses innerHTML only after escapeHtmlMap on the label fragment; numeric parts are plain text.
+ * @author Jiahao
  */
 
 /** Upper bound (exclusive) for LOW tier in °C; keep in sync with chart/badge CSS modifiers. */
@@ -21,6 +22,7 @@ var MAP_TEMP_HIGH_MIN_C = 24;
  * Map Celsius to LOW / MID / HIGH for the detail badge and chart bar hue.
  * @param {number} tempC
  * @returns {{ tier: string, label: string }}
+ * @author Jiahao
  */
 function mapTempTierFromCelsius(tempC) {
     if (typeof tempC !== "number" || isNaN(tempC)) {
@@ -66,6 +68,7 @@ var mapSpotDetailUi = {
 
 /**
  * One-time DOM build: backdrop + aside appended to body. Click backdrop closes; panel stops propagation.
+ * @author Jiahao
  */
 function ensureMapSpotDetailUi() {
     if (mapSpotDetailUi.backdrop) {
@@ -182,6 +185,7 @@ function ensureMapSpotDetailUi() {
 /**
  * @param {Object} snap
  * @returns {string}
+ * @author Jiahao
  */
 function formatDetailTemp(snap) {
     if (typeof snap.tempC === "number" && !isNaN(snap.tempC)) {
@@ -195,6 +199,7 @@ function formatDetailTemp(snap) {
  * Only the UV row mixes HTML (escaped uvLevel); other rows use textContent.
  * @param {HTMLElement} statsEl
  * @param {Object} snap Hourly row from getSpotHourly
+ * @author Jiahao
  */
 function renderDetailStats(statsEl, snap) {
     statsEl.textContent = "";
@@ -248,6 +253,7 @@ function renderDetailStats(statsEl, snap) {
  * @param {HTMLElement} chartEl
  * @param {Array<Object>} hourly
  * @param {number} selectedHour Current map time rail hour
+ * @author Jiahao
  */
 function renderTemperatureBars(chartEl, hourly, selectedHour) {
     chartEl.textContent = "";
@@ -322,6 +328,7 @@ function renderTemperatureBars(chartEl, hourly, selectedHour) {
 /**
  * Open the detail panel for a spot and sync to the current time rail hour.
  * @param {Object} spot
+ * @author Jiahao
  */
 function openMapSpotDetail(spot) {
     ensureMapSpotDetailUi();
@@ -336,6 +343,10 @@ function openMapSpotDetail(spot) {
     }
 }
 
+/**
+ * Close the spot detail panel and clear selected spot state.
+ * @author Jiahao
+ */
 function closeMapSpotDetail() {
     if (!mapSpotDetailUi.backdrop || !mapSpotDetailUi.panel) {
         return;
@@ -351,6 +362,7 @@ function closeMapSpotDetail() {
  * Spot currently shown in the detail sheet, if the sheet is open.
  * Used to pre-select a location in the report modal (see mapReport.js).
  * @returns {Object|null}
+ * @author Jiahao
  */
 function getMapSpotDetailCurrentSpot() {
     if (!mapSpotDetailUi.panel || mapSpotDetailUi.panel.hidden) {
@@ -362,6 +374,7 @@ function getMapSpotDetailCurrentSpot() {
 /**
  * Called on maptimechange (when the sheet may be closed) and when opening a spot.
  * No-ops if no spot or panel is hidden — avoids wasted DOM work.
+ * @author Jiahao
  */
 function syncMapSpotDetailPanel() {
     var spot = mapSpotDetailUi.currentSpot;

@@ -5,12 +5,14 @@
  * Expected future API shape (illustrative):
  * { id, name, lat, lng, tempC, uvIndex, uvLevel, humidityPct, windKmh, shadeScore, summary, hourly[] }
  * hourly[h] mirrors the scalar fields for that hour (0–23).
+ * @author Jiahao
  */
 
 /**
  * Map a numeric UV index to a coarse label (mock / UI only).
  * @param {number} uv
  * @returns {string}
+ * @author Jiahao
  */
 function mockUvLevelFromIndex(uv) {
     if (uv <= 0) return "None";
@@ -25,6 +27,7 @@ function mockUvLevelFromIndex(uv) {
  * Synthesize 24 hourly samples from a spot baseline so the map detail chart has data before the API exists.
  * @param {Object} spot
  * @returns {Array<Object>}
+ * @author Jiahao
  */
 function buildMockHourlySeries(spot) {
     var baseT = typeof spot.tempC === "number" && !isNaN(spot.tempC) ? spot.tempC : 18;
@@ -175,6 +178,10 @@ var MOCK_MAP_LOCATIONS = [
     },
 ];
 
+/**
+ * Attach generated hourly arrays to each mock spot.
+ * @author Jiahao
+ */
 (function attachMockHourlyToSpots() {
     if (typeof MOCK_MAP_LOCATIONS === "undefined" || !Array.isArray(MOCK_MAP_LOCATIONS)) {
         return;

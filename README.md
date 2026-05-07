@@ -20,3 +20,11 @@ Team Members:
 ## More details to come
 
 TBA
+
+## Attributions
+
+A minimal executable frontend demo for the map experience was generated with Claude AI.
+The demo includes a working Leaflet map with a `leaflet.heat` overlay, so temperature-like
+intensity data can be rendered as a visual heat layer directly on the map.
+The goal of this prototype is to provide a runnable baseline for interaction, styling, and
+future integration with real backend/location data while core user features are still in progress.

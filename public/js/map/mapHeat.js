@@ -27,6 +27,7 @@
  * 3) IDW for filler samples
  *    Inverse-distance weighting (power 2, epsilon against divide-by-zero) is standard for
  *    scattered stations; weights are in degree space, which is acceptable at city scale for mock UI.
+ * @author Jiahao
  */
 
 (function (global) {
@@ -36,6 +37,7 @@
      * Collect station lat/lng and the temperature at the chosen hour (from mock hourly arrays).
      * @param {number} hour 0–23
      * @returns {Array<{ lat: number, lng: number, tempC: number }>}
+     * @author Jiahao
      */
     function getMockHeatStationsAtHour(hour) {
         if (hour < 0) hour = 0;
@@ -73,6 +75,7 @@
      * Night: cool-only stops + lower max → faint blue/teal field. Day: full spectral + higher max.
      * @param {number} hour 0–23
      * @returns {Object} Leaflet.heat options (radius, blur, gradient, max, minOpacity, maxZoom)
+     * @author Jiahao
      */
     function getMockHeatLayerOptionsForHour(hour) {
         if (hour < 0) hour = 0;
@@ -125,6 +128,7 @@
      * Min/max temperature across all mock hourly samples, with small padding.
      * Using one scale for all hours avoids “every hour looks the same” after normalization.
      * @returns {{ min: number, max: number }}
+     * @author Jiahao
      */
     function getMockHeatGlobalTempRange() {
         if (mockHeatGlobalTempRangeCache) {
@@ -164,6 +168,7 @@
      * @param {number} lng
      * @param {Array<{ lat: number, lng: number, tempC: number }>} stations
      * @returns {number} Interpolated °C
+     * @author Jiahao
      */
     function idwTempAt(lat, lng, stations) {
         if (!stations.length) {
@@ -188,6 +193,7 @@
      * Complements temperature data so the layer “dims” at night even when blur is heavy.
      * @param {number} hour 0–23
      * @returns {number} Multiplier in roughly [0.08, 1]
+     * @author Jiahao
      */
     function mockHeatDiurnalIntensityWeight(hour) {
         var sun = Math.max(0, Math.min(1, Math.sin(((hour - 4) / 15) * Math.PI)));
@@ -202,6 +208,7 @@
      *   - Multiply every intensity by mockHeatDiurnalIntensityWeight(hour).
      * @param {number} hour 0–23
      * @returns {Array<Array<number>>}
+     * @author Jiahao
      */
     function buildMockHeatLatLngs(hour) {
         if (hour < 0) hour = 0;
@@ -303,10 +310,16 @@
      * (workaround for Leaflet.heat redraw throttling — see file header).
      * @param {L.Map} map
      * @returns {{ refresh: function(number): void }}
+     * @author Jiahao
      */
     function createMapHeatController(map) {
         var mockHeatLayer = null;
 
+        /**
+         * Rebuild the heat layer for the chosen hour.
+         * @param {number} hour
+         * @author Jiahao
+         */
         function refresh(hour) {
             if (typeof L.heatLayer !== "function") {
                 return;

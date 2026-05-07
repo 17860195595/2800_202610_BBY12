@@ -4,6 +4,7 @@
  * Markup: index.html. Theme: css/components/mapReport.css
  *
  * Submit is client-only (console) until user accounts / API are wired.
+ * @author Jiahao
  */
 
 /** @type {boolean} */
@@ -14,6 +15,7 @@ var mapReportListenersBound = false;
 
 /**
  * @returns {HTMLElement|null}
+ * @author Jiahao
  */
 function mapReportModalEl() {
     return document.getElementById("map-report-modal");
@@ -21,6 +23,7 @@ function mapReportModalEl() {
 
 /**
  * @returns {Object|null} bootstrap.Modal instance
+ * @author Jiahao
  */
 function mapReportGetModal() {
     var el = mapReportModalEl();
@@ -30,6 +33,10 @@ function mapReportGetModal() {
     return bootstrap.Modal.getOrCreateInstance(el);
 }
 
+/**
+ * Clear inline status text in the report modal.
+ * @author Jiahao
+ */
 function mapReportClearStatus() {
     var status = document.getElementById("map-report-status");
     if (status) {
@@ -38,11 +45,20 @@ function mapReportClearStatus() {
     }
 }
 
+/**
+ * Return selected report type from radio group.
+ * @returns {string}
+ * @author Jiahao
+ */
 function mapReportSelectedTypeId() {
     var picked = document.querySelector('input[name="map-report-type"]:checked');
     return picked && picked.value ? picked.value : "";
 }
 
+/**
+ * Open the report modal.
+ * @author Jiahao
+ */
 function openMapReport() {
     var modal = mapReportGetModal();
     if (!modal) {
@@ -52,6 +68,10 @@ function openMapReport() {
     modal.show();
 }
 
+/**
+ * Close the report modal.
+ * @author Jiahao
+ */
 function closeMapReport() {
     var modal = mapReportGetModal();
     if (!modal) {
@@ -63,6 +83,7 @@ function closeMapReport() {
 
 /**
  * @returns {boolean} True if the modal was open and is now closed.
+ * @author Jiahao
  */
 function closeMapReportIfOpen() {
     if (!mapReportOpen) {
@@ -72,6 +93,10 @@ function closeMapReportIfOpen() {
     return true;
 }
 
+/**
+ * Validate and submit the current report payload (console-only for now).
+ * @author Jiahao
+ */
 function mapReportOnSubmit() {
     mapReportClearStatus();
     var typeId = mapReportSelectedTypeId();
@@ -101,6 +126,10 @@ function mapReportOnSubmit() {
     }
 }
 
+/**
+ * Bind report FAB/modal events once.
+ * @author Jiahao
+ */
 function initMapReport() {
     var fab = document.getElementById("map-report-fab");
     var modalEl = mapReportModalEl();
