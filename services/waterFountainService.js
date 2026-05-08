@@ -5,7 +5,7 @@
  */
 async function fetchWaterFountainData() {
     try {
-        const url = `/api/explore/v2.1/catalog/datasets/drinking-fountains/records?select=geo_point_2d%2C%20location&limit=-1`;
+        const url = `https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/drinking-fountains/records?select=geo_point_2d%2C%20location&limit=-1`;
         const response = await fetch(url);
         const data = await response.json();
 

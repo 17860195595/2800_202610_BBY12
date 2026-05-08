@@ -22,6 +22,7 @@ const { getSunPosition } = require("./services/sunAngleService.js");
 const { fetchWeatherData } = require("./services/weatherService.js");
 const { fetchTreeData } = require("./services/treeService.js");
 const { fetchBuildingData } = require("./services/buildingService.js");
+const { fetchWaterFountainData } = require("./services/waterFountainService.js");
 
 //setup express app
 const app = express();
