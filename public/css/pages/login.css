@@ -19,7 +19,7 @@ body:has(> #app-header + .login-page) {
     box-sizing: border-box;
 }
 
-.login-page .logo-container
+.logo-container
 {
     justify-self: center;
     width: 80%;
@@ -27,7 +27,7 @@ body:has(> #app-header + .login-page) {
     margin: 5vh var(--space-5);
 }
 
-.login-page .logo-img
+.logo-img
 {
     width: 100%;
     height: 100%;
@@ -35,7 +35,7 @@ body:has(> #app-header + .login-page) {
     display: block;
 }
 
-.login-page .login-container
+.login-container
 {
     display: flex;
     flex-direction: column;
@@ -47,7 +47,7 @@ body:has(> #app-header + .login-page) {
     background-color: lawngreen;
 }
 
-.login-page .login-text-container
+.login-text-container
 {
     display: flex;
     width: 50%;
@@ -60,7 +60,7 @@ body:has(> #app-header + .login-page) {
     align-self: center;
 }
 
-.login-page .login-form
+.login-form
 {
     display: flex;
     flex-direction: column;
@@ -72,7 +72,7 @@ body:has(> #app-header + .login-page) {
     justify-content: space-around;
 }
 
-.login-page .login-form input
+.login-form input
 {
     align-self: center;
     height: 15%;
@@ -83,7 +83,7 @@ body:has(> #app-header + .login-page) {
     border-radius: var(--radius-sm);
 }
 
-.login-page .login-form button
+.login-form button
 {
     height: 15%;
     width: 50%;
@@ -95,7 +95,7 @@ body:has(> #app-header + .login-page) {
     cursor: pointer;
 }
 
-.login-page .alt-text-container
+.login-alt-text-container
 {
     display: flex;
     flex-direction: column;
