@@ -1,7 +1,9 @@
-/* ==============================
-   Settings Page Base Variables
-   ============================== */
-
+/*
+ * Added by @Edward
+ *
+ * Styles the Settings page, including display preference cards,
+ * select controls, reset button, and prototype note.
+ */
 body[data-accent="green"] {
   --accent-color: #7aa66d;
   --accent-light: #e7f2e2;

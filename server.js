@@ -65,14 +65,21 @@ app.get("/analytics", (req, res) =>
     res.sendFile(path.join(__dirname, '/public/analytics.html'));
   });
 
-app.get("/about", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/about.html"));
-});
 
 app.get("/alert", (req, res) => {
   res.sendFile(path.join(__dirname, "/public/alert.html"));
 });
 
+/**
+ * Added by @Edward
+ *
+ * Adds routes for the Me, Profile, Settings, and About pages.
+ * These pages support the user profile/settings flow from the Me page.
+ */
+
+app.get("/about", (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/about.html"));
+});
 app.get("/me", (req, res) => {
   res.sendFile(path.join(__dirname, "/public/me.html"));
 });

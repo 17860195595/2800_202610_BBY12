@@ -20,7 +20,12 @@
 
   <body class="has-app-footer">
     <div id="app-header"></div>
- 
+    <!--
+    Added by @Edward
+
+    Builds the Me page as the main user hub.
+    This page links users to Profile, Settings, and About pages.
+    -->
     <main class="page-shell me-page">
       <section class="me-profile-panel">
         <div class="profile-cover"></div>
@@ -38,42 +43,42 @@
 
       <a href="profile.html" class="edit-profile-btn"> ✏️ Edit Profile </a>
 
+      <section class="me-menu-section">
+        <a href="/profile" class="me-menu-card">
+          <div class="menu-icon">👤</div>
 
+          <div class="menu-content">
+            <h2>My Profile</h2>
+            <p>
+              Save your name, preferred area, and outdoor comfort preferences.
+            </p>
+          </div>
 
-<section class="me-menu-section">
-  <a href="/profile" class="me-menu-card">
-    <div class="menu-icon">👤</div>
+          <span class="menu-arrow">›</span>
+        </a>
 
-    <div class="menu-content">
-      <h2>My Profile</h2>
-      <p>Save your name, preferred area, and outdoor comfort preferences.</p>
-    </div>
+        <a href="/settings" class="me-menu-card settings-menu-card">
+          <div class="menu-icon">⚙️</div>
 
-    <span class="menu-arrow">›</span>
-  </a>
+          <div class="menu-content">
+            <h2>Settings</h2>
+            <p>Manage language, theme, alerts, area, and heat sensitivity.</p>
+          </div>
 
-  <a href="/settings" class="me-menu-card settings-menu-card">
-    <div class="menu-icon">⚙️</div>
+          <span class="menu-arrow">›</span>
+        </a>
 
-    <div class="menu-content">
-      <h2>Settings</h2>
-      <p>Manage language, theme, alerts, area, and heat sensitivity.</p>
-    </div>
+        <a href="/about" class="me-menu-card">
+          <div class="menu-icon">ℹ️</div>
 
-    <span class="menu-arrow">›</span>
-  </a>
+          <div class="menu-content">
+            <h2>About ShadeSafe</h2>
+            <p>Learn about the app, our mission, and Team BBY-12.</p>
+          </div>
 
-  <a href="/about" class="me-menu-card">
-    <div class="menu-icon">ℹ️</div>
-
-    <div class="menu-content">
-      <h2>About ShadeSafe</h2>
-      <p>Learn about the app, our mission, and Team BBY-12.</p>
-    </div>
-
-    <span class="menu-arrow">›</span>
-  </a>
-</section>
+          <span class="menu-arrow">›</span>
+        </a>
+      </section>
 
       <section class="project-summary-card">
         <h2>ShadeSafe Vancouver</h2>

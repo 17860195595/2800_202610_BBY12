@@ -1,3 +1,10 @@
+/**
+ * Added by @Edward
+ *
+ * Handles Profile page interactions for the front-end prototype.
+ * Saves user profile information and profile photo preview to localStorage.
+ */
+
 document.addEventListener("DOMContentLoaded", () => {
   const avatarInput = document.getElementById("avatarInput");
   const avatarPreview = document.getElementById("avatarPreview");

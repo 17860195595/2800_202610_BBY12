@@ -1,3 +1,10 @@
+/*
+ * Added by @Edward
+ *
+ * Styles the Profile page, including the profile form,
+ * profile photo upload area, and avatar preview.
+ */
+
 .profile-card {
   display: flex;
   align-items: center;

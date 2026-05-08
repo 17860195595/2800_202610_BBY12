@@ -1,3 +1,10 @@
+/*
+ * Added by @Edward
+ *
+ * Provides shared layout styles for Profile, Settings, and About subpages.
+ * These pages do not use the bottom footer and return to the Me page instead.
+ */
+
 .sub-page {
   min-height: 100vh;
   margin: 0;

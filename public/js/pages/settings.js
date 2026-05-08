@@ -1,3 +1,10 @@
+/**
+ * Added by @Edward
+ *
+ * Handles Settings page interactions for the front-end prototype.
+ * Saves display preferences such as theme and accent color to localStorage.
+ */
+
 document.addEventListener("DOMContentLoaded", () => {
   const settingControls = document.querySelectorAll("[data-setting]");
   const resetButton = document.getElementById("resetPreferencesBtn");
