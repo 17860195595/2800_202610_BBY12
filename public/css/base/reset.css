@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+/* Global rem baseline: 100% = browser default font size (usually 16px); 1rem tracks user text scaling */
+html {
+  font-size: 100%;
+}
+
 html,
 body {
   margin: 0;
@@ -15,6 +20,8 @@ body {
   background: linear-gradient(180deg, var(--bg) 0%, var(--bg-warm) 55%, var(--bg) 100%);
   background-attachment: fixed;
   color: var(--text);
-  padding-bottom: env(safe-area-inset-bottom);
   -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0;
+  padding-bottom: env(safe-area-inset-bottom);
 }

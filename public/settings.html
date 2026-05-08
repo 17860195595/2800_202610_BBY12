@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Settings — BBY-12</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/pages/subpage.css" />
+    <link rel="stylesheet" href="/css/pages/settings.css" />
+  </head>
+
+  <body class="sub-page">
+    <div id="app-header"></div>
+    <!--
+      Added by @Edward
+
+      Creates the Settings page for front-end display preferences.
+      Current settings focus on theme, accent color, and local preference reset.
+    -->
+    <main class="sub-page-shell settings-page">
+      <a href="/me" class="back-link">← Back to Me</a>
+
+      <h1 class="sub-page-title">Settings</h1>
+      <p class="sub-page-subtitle">
+        Customize the look and feel of ShadeSafe Vancouver.
+      </p>
+
+      <h2 class="settings-section-title">Appearance</h2>
+
+      <section class="setting-card vertical-setting">
+        <div>
+          <h2>App Theme</h2>
+          <p>Choose the visual style for the app interface.</p>
+        </div>
+
+        <select class="setting-select" data-setting="theme">
+          <option value="light" selected>Light</option>
+          <option value="soft-green">Soft Green</option>
+          <option value="dark">Dark</option>
+        </select>
+      </section>
+
+      <section class="setting-card vertical-setting">
+        <div>
+          <h2>Accent Color</h2>
+          <p>Choose the main color used for buttons and highlights.</p>
+        </div>
+
+        <select class="setting-select" data-setting="accentColor">
+          <option value="green" selected>Forest Green</option>
+          <option value="blue">Ocean Blue</option>
+          <option value="orange">Warm Orange</option>
+        </select>
+      </section>
+
+      <h2 class="settings-section-title">Account</h2>
+
+      <section class="setting-card vertical-setting">
+        <div>
+          <h2>Reset Local Preferences</h2>
+          <p>Clear saved profile and display preferences on this browser.</p>
+        </div>
+
+        <button type="button" class="secondary-btn" id="resetPreferencesBtn">
+          Reset Preferences
+        </button>
+      </section>
+
+      <section class="settings-note-card">
+        <h2>Prototype Note</h2>
+        <p>
+          This is a front-end prototype. Display settings are saved locally in the
+          browser and can be expanded later when the app has more data-driven features.
+        </p>
+      </section>
+    </main>
+
+    <script src="/js/components/header.js"></script>
+    <script>
+      loadAppHeader({ showBack: false });
+    </script>
+
+    <script src="/js/pages/settings.js"></script>
+  </body>
+</html>

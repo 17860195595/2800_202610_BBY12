@@ -1,0 +1,62 @@
+.analytics-page
+{
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+.analytics-layout
+{
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.sorting-banner
+{
+    display: flex;
+    justify-content: space-around;
+    gap: var(--space-5);
+    align-self: center;
+    width: 50%;
+}
+
+.location-sort-container
+{
+    display: flex;
+    justify-content: space-around;
+    width: 25%;
+}
+
+.time-sort-container
+{
+    display: flex;
+    justify-content: space-around;
+    width: 25%;
+}
+
+.analytics-container
+{
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    overflow-y: auto;
+
+    padding: var(--space-2-5);
+    width: 80%;
+    height: 37.5rem;
+    gap: var(--space-2-5);
+    border: var(--space-px-2) solid black;
+    border-radius: var(--radius-lg);
+}
+
+.analytics-example-item
+{
+    padding: var(--space-2-5);
+    border: var(--space-px-1) solid black;
+    border-radius: var(--radius-lg);
+}
+
+/*space around = evenly spread*/
+/*space evenly = spread into corners*/

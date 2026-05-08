@@ -3,5 +3,22 @@
   --bg-warm: #f6f3ee;
   --text: #14221a;
   --primary-green-dark: #0d4a2d;
+  /* Matches header / tab bar background */
+  --sage: rgb(121, 163, 105);
   --font: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Spacing and radii (assuming 1rem = 16px at default browser settings) */
+  --space-px-1: 0.0625rem; /* 1px */
+  --space-px-2: 0.125rem; /* 2px */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-2-5: 0.625rem; /* 10px */
+  --space-xs: 0.3125rem; /* 5px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --radius-sm: 0.3125rem; /* 5px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.625rem; /* 10px */
 }

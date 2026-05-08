@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Profile — BBY-12</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/pages/subpage.css" />
+    <link rel="stylesheet" href="css/pages/profile.css" />
+  </head>
+
+  <body class="sub-page">
+    <div id="app-header"></div>
+
+    <!--
+      Added by @Edward
+
+      Creates the Profile page where users can edit their display name,
+      role, email, profile photo, and short introduction.
+     -->
+    <main class="sub-page-shell profile-page">
+      <a href="/me" class="back-link">← Back to Me</a>
+
+      <h1 class="sub-page-title">My Profile</h1>
+      <p class="sub-page-subtitle">
+        Update your basic information and outdoor comfort preferences.
+      </p>
+
+      <section class="profile-card">
+        <div class="profile-avatar-large">🌳</div>
+
+        <div>
+          <h2>Guest User</h2>
+          <p>Developer · ShadeSafe Vancouver</p>
+        </div>
+      </section>
+
+      <section class="sub-card profile-form-card">
+        <label class="form-field">
+          <span>Name</span>
+          <input type="text" value="Guest User" placeholder="Enter your name" />
+        </label>
+
+        <label class="form-field">
+          <span>Role</span>
+          <input type="text" value="Developer" placeholder="Enter your role" />
+        </label>
+
+        <label class="form-field">
+          <span>Email</span>
+          <input
+            type="email"
+            value="guest@example.com"
+            placeholder="Enter your email"
+          />
+        </label>
+
+        <label class="form-field">
+          <span>Profile Photo</span>
+
+          <div class="avatar-upload-box">
+            <div class="avatar-preview" id="avatarPreview">🌳</div>
+
+            <div class="avatar-upload-content">
+              <p>Upload a profile photo</p>
+              <input type="file" id="avatarInput" accept="image/*" />
+            </div>
+          </div>
+        </label>
+
+        <label class="form-field">
+          <span>About Me</span>
+          <textarea
+            rows="4"
+            placeholder="Write a short introduction about yourself..."
+          ></textarea>
+        </label>
+
+        <button type="button" class="primary-btn">Save Profile</button>
+      </section>
+    </main>
+
+    <script src="js/components/header.js"></script>
+    <script>
+      loadAppHeader({ showBack: false });
+    </script>
+
+    <script src="js/pages/profile.js"></script>
+  </body>
+</html>
