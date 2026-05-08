@@ -94,7 +94,7 @@ body:has(> #app-header + .signup-page) {
     cursor: pointer;
 }
 
-.signup-page .alt-text-container
+.signup-page .signup-alt-text-container
 {
     display: flex;
     flex-direction: column;
