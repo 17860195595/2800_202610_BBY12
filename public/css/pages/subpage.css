@@ -6,32 +6,6 @@
   font-family: "Plus Jakarta Sans", Arial, sans-serif;
 }
 
-/* Fix shared header size on sub pages */
-.sub-page #app-header {
-  width: 100%;
-  max-width: 26.875rem;
-  height: 4.75rem;
-  margin: 0 auto;
-  background-color: #7aa66d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.sub-page #app-header img {
-  max-height: 2rem;
-  width: auto;
-}
-
-.sub-page #app-header h1,
-.sub-page #app-header .brand-title,
-.sub-page #app-header span {
-  font-size: 0.85rem;
-  color: #0b4a1b;
-}
-
-/* Main mobile shell */
 .sub-page-shell {
   width: 100%;
   max-width: 26.875rem;

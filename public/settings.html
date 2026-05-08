@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -14,9 +14,9 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/pages/subpage.css" />
-    <link rel="stylesheet" href="css/pages/settings.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/pages/subpage.css" />
+    <link rel="stylesheet" href="/css/pages/settings.css" />
   </head>
 
   <body class="sub-page">
@@ -27,33 +27,21 @@
 
       <h1 class="sub-page-title">Settings</h1>
       <p class="sub-page-subtitle">
-        Manage your ShadeSafe preferences and alert options.
+        Customize the look and feel of ShadeSafe Vancouver.
       </p>
 
-      <h2 class="settings-section-title">App Preferences</h2>
-
-      <section class="setting-card vertical-setting">
-        <div>
-          <h2>Language</h2>
-          <p>Choose the language used in the app.</p>
-        </div>
-
-        <select class="setting-select" data-setting="language">
-          <option value="en" selected>English</option>
-          <option value="zh">Chinese</option>
-        </select>
-      </section>
+      <h2 class="settings-section-title">Appearance</h2>
 
       <section class="setting-card vertical-setting">
         <div>
           <h2>App Theme</h2>
-          <p>Choose how the app should look.</p>
+          <p>Choose the visual style for the app interface.</p>
         </div>
 
         <select class="setting-select" data-setting="theme">
           <option value="light" selected>Light</option>
+          <option value="soft-green">Soft Green</option>
           <option value="dark">Dark</option>
-          <option value="system">System Default</option>
         </select>
       </section>
 
@@ -70,76 +58,33 @@
         </select>
       </section>
 
-      <section class="setting-card vertical-setting">
-        <div>
-          <h2>Temperature Unit</h2>
-          <p>Choose how temperature should be displayed.</p>
-        </div>
-
-        <select class="setting-select" data-setting="temperatureUnit">
-          <option value="celsius" selected>Celsius °C</option>
-          <option value="fahrenheit">Fahrenheit °F</option>
-        </select>
-      </section>
-
-      <h2 class="settings-section-title">ShadeSafe Options</h2>
-      <section class="setting-card">
-        <div>
-          <h2>Heat Alerts</h2>
-          <p>Receive alerts when outdoor heat risk is high.</p>
-        </div>
-
-        <label class="switch">
-          <input type="checkbox" checked data-setting="heatAlerts" />
-          <span class="slider"></span>
-        </label>
-      </section>
-
-      <section class="setting-card">
-        <div>
-          <h2>Shade Recommendations</h2>
-          <p>Show suggested shaded areas on the map.</p>
-        </div>
-
-        <label class="switch">
-          <input type="checkbox" checked />
-          <span class="slider"></span>
-        </label>
-      </section>
+      <h2 class="settings-section-title">Account</h2>
 
       <section class="setting-card vertical-setting">
         <div>
-          <h2>Preferred Area</h2>
-          <p>Choose the area you use most often.</p>
+          <h2>Reset Local Preferences</h2>
+          <p>Clear saved profile and display preferences on this browser.</p>
         </div>
 
-        <select class="setting-select">
-          <option selected>Vancouver</option>
-          <option>Burnaby</option>
-          <option>Richmond</option>
-          <option>Surrey</option>
-        </select>
+        <button type="button" class="secondary-btn" id="resetPreferencesBtn">
+          Reset Preferences
+        </button>
       </section>
 
-      <section class="setting-card vertical-setting">
-        <div>
-          <h2>Heat Sensitivity</h2>
-          <p>Adjust recommendations based on your comfort level.</p>
-        </div>
-
-        <select class="setting-select">
-          <option>Low</option>
-          <option selected>Medium</option>
-          <option>High</option>
-        </select>
+      <section class="settings-note-card">
+        <h2>Prototype Note</h2>
+        <p>
+          This is a front-end prototype. Display settings are saved locally in the
+          browser and can be expanded later when the app has more data-driven features.
+        </p>
       </section>
     </main>
 
-    <script src="js/components/header.js"></script>
+    <script src="/js/components/header.js"></script>
     <script>
       loadAppHeader({ showBack: false });
     </script>
 
-    <script src="js/pages/settings.js"></script>
+    <script src="/js/pages/settings.js"></script>
   </body>
 </html>

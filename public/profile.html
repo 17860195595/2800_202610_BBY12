@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -35,43 +35,52 @@
 
         <div>
           <h2>Guest User</h2>
-          <p>ShadeSafe Vancouver User</p>
+          <p>Developer · ShadeSafe Vancouver</p>
         </div>
       </section>
 
       <section class="sub-card profile-form-card">
         <label class="form-field">
           <span>Name</span>
-          <input type="text" value="Guest User" />
+          <input type="text" value="Guest User" placeholder="Enter your name" />
         </label>
 
         <label class="form-field">
           <span>Role</span>
-          <input type="text" value="Developer" />
+          <input type="text" value="Developer" placeholder="Enter your role" />
         </label>
 
         <label class="form-field">
-          <span>Preferred Area</span>
-          <select>
-            <option selected>Vancouver</option>
-            <option>Burnaby</option>
-            <option>Richmond</option>
-            <option>Surrey</option>
-          </select>
+          <span>Email</span>
+          <input
+            type="email"
+            value="guest@example.com"
+            placeholder="Enter your email"
+          />
         </label>
 
         <label class="form-field">
-          <span>Heat Sensitivity</span>
-          <select>
-            <option>Low</option>
-            <option selected>Medium</option>
-            <option>High</option>
-          </select>
+          <span>Profile Photo</span>
+
+          <div class="avatar-upload-box">
+            <div class="avatar-preview" id="avatarPreview">🌳</div>
+
+            <div class="avatar-upload-content">
+              <p>Upload a profile photo</p>
+              <input type="file" id="avatarInput" accept="image/*" />
+            </div>
+          </div>
         </label>
 
-        <button type="button" class="primary-btn">
-          Save Profile
-        </button>
+        <label class="form-field">
+          <span>About Me</span>
+          <textarea
+            rows="4"
+            placeholder="Write a short introduction about yourself..."
+          ></textarea>
+        </label>
+
+        <button type="button" class="primary-btn">Save Profile</button>
       </section>
     </main>
 
