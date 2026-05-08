@@ -39,3 +39,9 @@ TBA
 - Alerts page icon integration using Lucide Icons was assisted by ChatGPT and modified/integrated by Eric Guo.  
   ChatGPT: https://chat.openai.com/  
   Lucide Icons: https://lucide.dev/
+
+  - Me/Profile/Settings/About page layout and navigation flow were assisted by ChatGPT and modified/integrated by Edward Liang.  
+  ChatGPT: https://chat.openai.com/
+
+  - Settings page appearance preferences was assisted by ChatGPT and modified/integrated by Edward Liang.  
+  ChatGPT: https://chat.openai.com/
