@@ -67,7 +67,7 @@ const User = mongoose.model('User', userSchema)
  * @author Adam
  */
 app.use(session(
-  {
+{
     secret: SESSION_SECRET,
     store: MongoStore.create({mongoUrl : MONGODB_URL}),
     saveUninitialized : false,
@@ -76,7 +76,7 @@ app.use(session(
     {
       maxAge: 1000 * 60 * 60 * 1          //delets cookie (wristband) after 1 hour  
     }
-  }));
+}));
 
 
 /**
@@ -333,26 +333,32 @@ app.get("/profile", (req, res) => {
 });
 
 
-(async function start() {
+(async function start() 
+{
   const url = process.env.MONGODB_URL || 'mongodb://localhost:27017/project_template';
   const skipMongo = String(process.env.SKIP_MONGODB || '').toLowerCase() === '1' || process.env.SKIP_MONGODB === 'true';
 
-  if (skipMongo) {
+  if (skipMongo) 
+  {
     console.warn('SKIP_MONGODB set — server starting without database.');
   }
-  else {
-    try {
+  else 
+  {
+    try 
+    {
       await mongoose.connect(url);
       console.log('MongoDB connected');
     }
-    catch (err) {
+    catch (err) 
+    {
       console.warn('MongoDB unavailable:', err.message);
       console.warn('Server will still run (static files / routes that do not need DB).');
       console.warn('Fix MONGODB_URL or start MongoDB, then restart to connect.');
     }
   }
 
-  app.listen(PORT, () => {
+  app.listen(PORT, () => 
+  {
     console.log(`Server listening on http://localhost:${PORT}`);
   });
 })();
