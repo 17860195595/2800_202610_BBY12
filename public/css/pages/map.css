@@ -267,8 +267,10 @@ body.has-app-footer.has-map-time-rail.has-bottom-dock {
   color: var(--primary-green-dark);
 }
 
-/* LOW / MID / HIGH — compact pill, softer fills (see index.js thresholds). */
-.map-spot-detail-panel__temp-tier {
+/* LOW / MID / HIGH — compact pill, softer fills. Driven by the 0–1 risk
+   score returned by /api/risk (see mapRiskTierFromScore in mapSpotDetail.js):
+     < 0.5 → low, 0.5–0.8 → mid, ≥ 0.8 → high. */
+.map-spot-detail-panel__risk-tier {
   grid-column: 1 / -1;
   grid-row: 2;
   margin: 0;
@@ -283,26 +285,26 @@ body.has-app-footer.has-map-time-rail.has-bottom-dock {
   box-shadow: 0 1px 2px rgba(13, 74, 45, 0.06);
 }
 
-.map-spot-detail-panel__temp-tier--low {
+.map-spot-detail-panel__risk-tier--low {
   color: #0d4a2d;
   background: rgba(143, 212, 160, 0.45);
   border: 1px solid rgba(30, 107, 58, 0.28);
 }
 
-.map-spot-detail-panel__temp-tier--mid {
+.map-spot-detail-panel__risk-tier--mid {
   color: #6b3d0a;
   background: rgba(255, 204, 128, 0.5);
   border: 1px solid rgba(196, 92, 18, 0.3);
 }
 
-.map-spot-detail-panel__temp-tier--high {
+.map-spot-detail-panel__risk-tier--high {
   color: #fff;
   background: linear-gradient(135deg, #e85a5a 0%, #9c1818 100%);
   border: 1px solid rgba(120, 20, 20, 0.35);
   box-shadow: 0 1px 3px rgba(156, 24, 24, 0.25);
 }
 
-.map-spot-detail-panel__temp-tier--unknown {
+.map-spot-detail-panel__risk-tier--unknown {
   color: rgba(20, 34, 26, 0.55);
   background: rgba(255, 255, 255, 0.65);
   border: 1px dashed rgba(121, 163, 105, 0.35);
@@ -746,7 +748,7 @@ body.has-app-footer.has-map-time-rail.has-bottom-dock {
     grid-row: 1;
   }
 
-  .map-spot-detail-panel__temp-tier {
+  .map-spot-detail-panel__risk-tier {
     grid-column: 1;
     grid-row: 2;
   }

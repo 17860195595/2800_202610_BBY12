@@ -23,25 +23,33 @@
  * @author Jiahao
  */
 
-/** Upper bound (exclusive) for LOW tier in °C; keep in sync with chart/badge CSS modifiers. */
-var MAP_TEMP_LOW_MAX_C = 18;
-/** Lower bound (inclusive) for HIGH tier in °C. */
-var MAP_TEMP_HIGH_MIN_C = 24;
+/** Upper bound (exclusive) of LOW tier on the 0–1 risk score scale. */
+var MAP_RISK_MID_MIN = 0.5;
+/** Lower bound (inclusive) of HIGH tier on the 0–1 risk score scale. */
+var MAP_RISK_HIGH_MIN = 0.8;
 
 /**
- * Map Celsius to LOW / MID / HIGH for the detail badge and chart bar hue.
- * @param {number} tempC
+ * Map a 0–1 risk score (from /api/risk → services/riskCalculationService.js)
+ * to LOW / MID / HIGH for the detail badge and chart bar hue. The bucket
+ * boundaries are intentionally fixed (not relative to the day's range) so
+ * the same score always reads the same tier:
+ *
+ *   < 0.5         → LOW
+ *   0.5 ≤ s < 0.8 → MID
+ *   ≥ 0.8         → HIGH
+ *
+ * @param {number} score 0–1 risk score; non-numeric / NaN → unknown tier.
  * @returns {{ tier: string, label: string }}
  * @author Jiahao
  */
-function mapTempTierFromCelsius(tempC) {
-    if (typeof tempC !== "number" || isNaN(tempC)) {
+function mapRiskTierFromScore(score) {
+    if (typeof score !== "number" || isNaN(score)) {
         return { tier: "unknown", label: "—" };
     }
-    if (tempC < MAP_TEMP_LOW_MAX_C) {
+    if (score < MAP_RISK_MID_MIN) {
         return { tier: "low", label: "LOW" };
     }
-    if (tempC < MAP_TEMP_HIGH_MIN_C) {
+    if (score < MAP_RISK_HIGH_MIN) {
         return { tier: "mid", label: "MID" };
     }
     return { tier: "high", label: "HIGH" };
@@ -53,7 +61,7 @@ function mapTempTierFromCelsius(tempC) {
  * @property {HTMLElement|null} backdrop
  * @property {HTMLElement|null} panel
  * @property {HTMLElement|null} titleEl
- * @property {HTMLElement|null} tempTierEl
+ * @property {HTMLElement|null} riskTierEl
  * @property {HTMLElement|null} timeLabelEl
  * @property {HTMLElement|null} summaryEl
  * @property {HTMLElement|null} statsEl
@@ -69,7 +77,7 @@ var mapSpotDetailUi = {
     backdrop: null,
     panel: null,
     titleEl: null,
-    tempTierEl: null,
+    riskTierEl: null,
     timeLabelEl: null,
     summaryEl: null,
     statsEl: null,
@@ -114,9 +122,9 @@ function ensureMapSpotDetailUi() {
     title.className = "map-spot-detail-panel__title";
     title.id = "map-spot-detail-title";
 
-    var tempTier = document.createElement("p");
-    tempTier.className = "map-spot-detail-panel__temp-tier map-spot-detail-panel__temp-tier--unknown";
-    tempTier.setAttribute("aria-live", "polite");
+    var riskTier = document.createElement("p");
+    riskTier.className = "map-spot-detail-panel__risk-tier map-spot-detail-panel__risk-tier--unknown";
+    riskTier.setAttribute("aria-live", "polite");
 
     var timeLabel = document.createElement("p");
     timeLabel.className = "map-spot-detail-panel__time";
@@ -132,7 +140,7 @@ function ensureMapSpotDetailUi() {
     });
 
     head.appendChild(title);
-    head.appendChild(tempTier);
+    head.appendChild(riskTier);
     head.appendChild(timeLabel);
     head.appendChild(closeBtn);
 
@@ -209,7 +217,7 @@ function ensureMapSpotDetailUi() {
     mapSpotDetailUi.backdrop = backdrop;
     mapSpotDetailUi.panel = panel;
     mapSpotDetailUi.titleEl = title;
-    mapSpotDetailUi.tempTierEl = tempTier;
+    mapSpotDetailUi.riskTierEl = riskTier;
     mapSpotDetailUi.timeLabelEl = timeLabel;
     mapSpotDetailUi.summaryEl = summary;
     mapSpotDetailUi.statsEl = stats;
@@ -294,8 +302,11 @@ function renderDetailStats(statsEl, snap) {
 
 /**
  * 24 buttons laid out as a mini bar chart. Pass null/[] while data is loading
- * to render an empty placeholder; otherwise heights encode temp within the
- * day's min–max for this spot. CSS classes encode LOW/MID/HIGH tier per bar.
+ * to render an empty placeholder; otherwise:
+ *   - bar HEIGHT encodes temperature within the day's min–max for this spot
+ *     (so the curve reads as the daily temperature profile)
+ *   - bar COLOUR encodes the risk-score tier (LOW/MID/HIGH) so a glance at
+ *     the chart shares the same story as the badge above the stats.
  * Each bar uses an IIFE (function (hour) { ... })(h) so the click handler
  * closes over the correct index.
  * @param {HTMLElement} chartEl
@@ -330,8 +341,12 @@ function renderTemperatureBars(chartEl, hourly, selectedHour) {
         var wrap = document.createElement("button");
         wrap.type = "button";
         var temp = typeof hourly[h].tempC === "number" ? hourly[h].tempC : minT;
-        var tierInfo = mapTempTierFromCelsius(
-            typeof hourly[h].tempC === "number" ? hourly[h].tempC : NaN
+        // Bar HEIGHT still encodes temperature (relative to the day's min/max
+        // so the curve reads as the daily temperature profile). The COLOUR
+        // tier is driven by the 0–1 risk score so the chart shares a single
+        // story with the panel's risk badge.
+        var tierInfo = mapRiskTierFromScore(
+            typeof hourly[h].riskScore === "number" ? hourly[h].riskScore : NaN
         );
         wrap.className =
             "map-spot-detail-chart__bar-wrap map-spot-detail-chart__bar-wrap--" + tierInfo.tier;
@@ -529,10 +544,10 @@ function syncMapSpotDetailPanel() {
 
     mapSpotDetailUi.titleEl.textContent = spot.name || "Location";
 
-    var tier = mapTempTierFromCelsius(snap ? snap.tempC : NaN);
-    mapSpotDetailUi.tempTierEl.textContent = tier.label;
-    mapSpotDetailUi.tempTierEl.className =
-        "map-spot-detail-panel__temp-tier map-spot-detail-panel__temp-tier--" + tier.tier;
+    var tier = mapRiskTierFromScore(snap ? snap.riskScore : NaN);
+    mapSpotDetailUi.riskTierEl.textContent = tier.label;
+    mapSpotDetailUi.riskTierEl.className =
+        "map-spot-detail-panel__risk-tier map-spot-detail-panel__risk-tier--" + tier.tier;
 
     mapSpotDetailUi.timeLabelEl.textContent = "Selected time: " + label;
     mapSpotDetailUi.summaryEl.textContent = spot.summary || "";

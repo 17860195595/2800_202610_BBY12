@@ -11,13 +11,18 @@
  *      fetches /api/risk for that single location via mapSpotDetail.js +
  *      services/mapApi.js → ensureSpotApiData. Nothing else is pre-warmed.
  *   4. Wire the time rail, toggle bar, report, onboarding, and global escape.
- *   5. Kick off the side fetches — fountains (/api/fountains, ~250 rows) and
- *      city buildings (lazy: only when the user actually switches to City
- *      mode, since the dataset is tens of thousands of points).
+ *   5. Kick off the side fetches:
+ *        - live weather grid (heat layer swap)
+ *        - fountains
  *
  * The 100 seeds in MOCK_MAP_LOCATIONS now ship without any weather data;
  * detail-panel numbers come 100% from the live backend, and the heat layer
  * is driven by the live /api/weather-grid after the initial mock paint.
+ *
+ * A previous "City" mode pre-fetched every Vancouver building footprint
+ * (~tens of thousands of points) for a clustered overlay; that path was
+ * removed because the Open Data exports endpoint is too slow and the 100
+ * curated seed locations cover the actual use case.
  *
  * @author Jiahao
  */
@@ -149,7 +154,7 @@
 
     /**
      * Show a transient toast-like status in the corner. Reused for "Loading…"
-     * / fountain count / city building count messages.
+     * / fountain count / weather-grid messages.
      * @param {string} text
      * @param {number} hideAfterMs Hide after this many ms (0 = keep)
      * @author Jiahao
@@ -172,48 +177,6 @@
                 el.hidden = true;
             }, hideAfterMs);
         }
-    }
-
-    /** Lazy fetch for the city-wide building footprint dataset. Kept on a
-     *  module-level promise so multiple toggles into City mode don't kick
-     *  off parallel fetches. fetchAllCityBuildings already caches in
-     *  localStorage for 7 days, so this is mostly an in-memory dedupe. */
-    var cityBuildingsPromise = null;
-
-    /**
-     * Trigger (or join) the lazy city-buildings fetch. The result is rendered
-     * via renderCityBuildingPins, which itself respects the current toggle
-     * mode (only attaches to the map when City is active).
-     *
-     * @returns {Promise<Array>} resolves with the building list
-     * @author Jiahao
-     */
-    function ensureCityBuildingsLoaded() {
-        if (typeof fetchAllCityBuildings !== "function") {
-            return Promise.resolve([]);
-        }
-        if (cityBuildingsPromise) return cityBuildingsPromise;
-
-        setMapStatusMessage("Loading city buildings…", 0);
-        cityBuildingsPromise = fetchAllCityBuildings()
-            .then(function (buildings) {
-                window.VAN_BUILDINGS = buildings;
-                if (typeof renderCityBuildingPins === "function") {
-                    renderCityBuildingPins(buildings, MOCK_MAP_LOCATIONS);
-                }
-                setMapStatusMessage(
-                    buildings.length.toLocaleString() + " buildings loaded",
-                    2400
-                );
-                return buildings;
-            })
-            .catch(function (err) {
-                console.warn("[index] city building fetch failed", err);
-                setMapStatusMessage("Could not load city buildings", 3000);
-                cityBuildingsPromise = null;
-                return [];
-            });
-        return cityBuildingsPromise;
     }
 
     /**
@@ -296,8 +259,7 @@
      * ownership stays here in the bootstrap.
      *
      * Local mode → seed spot pins (already on the map by default).
-     * City mode  → kicks the lazy city-building fetch the first time it is
-     *              activated, then attaches the cluster.
+     * Off mode   → detach the seed pin layer.
      *
      * @param {L.Map} map
      * @param {Object|null} heatController
@@ -311,9 +273,6 @@
             lastTogglePrefs.buildingsMode = mode;
             if (typeof setBuildingsMode !== "function") return;
             setBuildingsMode(mode, MOCK_MAP_LOCATIONS);
-            if (mode === "city") {
-                ensureCityBuildingsLoaded();
-            }
         });
 
         window.addEventListener("maptoggle:fountains", function (ev) {

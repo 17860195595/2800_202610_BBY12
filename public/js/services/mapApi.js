@@ -20,7 +20,6 @@
  *   fetchSpotRiskData(spot)             → Promise<{ hourly24, trees, buildings, raw }>
  *   ensureSpotApiData(spot)             → Promise<spot> (per-spot cached on demand)
  *   fetchAllFountains()                 → Promise<Array<{ lat, lng, location }>>
- *   fetchAllCityBuildings({force?})     → Promise<Array<{ lat, lng }>> (cached in localStorage)
  *   fetchWeatherGrid()                  → Promise<Array<{ lat, lng, hourly24 }>>
  *
  * @author Jiahao
@@ -275,104 +274,21 @@
             });
     }
 
-    /** localStorage key for the city-wide building cache. Bump the suffix if
-     *  the cached shape changes. */
-    var CITY_BUILDINGS_CACHE_KEY = "shadeSafe.cityBuildings.v1";
-    /** TTL for the cached city building list (7 days). The dataset is the
-     *  static 2015 footprint, so we can cache aggressively. */
-    var CITY_BUILDINGS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
     /**
-     * Try to read a still-fresh city-buildings array from localStorage.
-     * Returns null on miss / parse error / expiry — the caller will refetch.
-     * @returns {Array<{lat:number,lng:number}>|null}
+     * One-shot cleanup of the city-wide building cache. The "Buildings: City"
+     * mode (and the matching Vancouver Open Data exports fetch) was removed —
+     * the 100 curated key locations are enough for the use case — so we
+     * proactively reclaim the ~1–2 MB blob from any user's localStorage on
+     * the very next visit instead of leaving it to expire.
      * @author Jiahao
      */
-    function readCityBuildingsCache() {
+    (function cleanupRetiredCityBuildingsCache() {
         try {
-            var raw = window.localStorage.getItem(CITY_BUILDINGS_CACHE_KEY);
-            if (!raw) return null;
-            var parsed = JSON.parse(raw);
-            if (
-                !parsed ||
-                typeof parsed.cachedAt !== "number" ||
-                !Array.isArray(parsed.data)
-            ) {
-                return null;
-            }
-            if (Date.now() - parsed.cachedAt > CITY_BUILDINGS_CACHE_TTL_MS) {
-                return null;
-            }
-            return parsed.data;
+            window.localStorage.removeItem("shadeSafe.cityBuildings.v1");
         } catch (e) {
-            return null;
+            // private mode / storage blocked — nothing we need to do
         }
-    }
-
-    /**
-     * Persist the city-buildings array. Silently no-ops if storage is full or
-     * blocked (private mode etc.).
-     * @param {Array<{lat:number,lng:number}>} data
-     * @author Jiahao
-     */
-    function writeCityBuildingsCache(data) {
-        try {
-            window.localStorage.setItem(
-                CITY_BUILDINGS_CACHE_KEY,
-                JSON.stringify({ cachedAt: Date.now(), data: data })
-            );
-        } catch (e) {
-            console.warn("[mapApi] city building cache write failed", e);
-        }
-    }
-
-    /**
-     * Fetch every building footprint centroid in Vancouver, directly from the
-     * Vancouver Open Data exports endpoint (bypasses the backend's 50 m
-     * within_distance constraint in services/buildingService.js).
-     *
-     * Caches the result in localStorage for 7 days so repeat visits are
-     * instant. Pair with marker clustering on render — the dataset is tens
-     * of thousands of points.
-     *
-     * @param {{ force?: boolean }} [opts] force=true bypasses the cache
-     * @returns {Promise<Array<{ lat: number, lng: number }>>}
-     * @author Jiahao
-     */
-    function fetchAllCityBuildings(opts) {
-        var force = !!(opts && opts.force);
-        if (!force) {
-            var cached = readCityBuildingsCache();
-            if (cached) {
-                return Promise.resolve(cached);
-            }
-        }
-
-        var url =
-            "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/" +
-            "building-footprints-2015/exports/json?select=geo_point_2d";
-        return fetch(url, { headers: { Accept: "application/json" } })
-            .then(function (res) {
-                if (!res.ok) {
-                    throw new Error("Vancouver building exports responded " + res.status);
-                }
-                return res.json();
-            })
-            .then(function (rows) {
-                if (!Array.isArray(rows)) return [];
-                var out = [];
-                for (var i = 0; i < rows.length; i++) {
-                    var p = rows[i] && rows[i].geo_point_2d;
-                    if (!p) continue;
-                    var lat = typeof p.lat === "number" ? p.lat : parseFloat(p.lat);
-                    var lng = typeof p.lon === "number" ? p.lon : parseFloat(p.lon);
-                    if (isNaN(lat) || isNaN(lng)) continue;
-                    out.push({ lat: lat, lng: lng });
-                }
-                writeCityBuildingsCache(out);
-                return out;
-            });
-    }
+    })();
 
     /**
      * Fetch every drinking fountain in Vancouver. Normalizes the Vancouver Open
@@ -579,7 +495,6 @@
 
     global.fetchSpotRiskData = fetchSpotRiskData;
     global.fetchAllFountains = fetchAllFountains;
-    global.fetchAllCityBuildings = fetchAllCityBuildings;
     global.ensureSpotApiData = ensureSpotApiData;
     global.fetchWeatherGrid = fetchWeatherGrid;
 })(window);

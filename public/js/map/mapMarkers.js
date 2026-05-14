@@ -10,14 +10,16 @@
  *                                            per seed location (the 100
  *                                            curated anchors). Each pin opens
  *                                            the detail panel for its own seed.
- *   - renderCityBuildingPins(...)         — City mode: every city-wide
- *                                            building footprint centroid as a
- *                                            green pin (clustered).
  *   - addFountainMarkers(map, fountains)  — small blue teardrops from /api/fountains.
  *
  * Click on any pin opens the spot detail panel; mapSpotDetail.js will
  * lazy-fetch /api/risk for that pin's coordinates so the user only ever
  * triggers a backend call when they actually look at a place.
+ *
+ * The previous "City" mode (every Vancouver building footprint centroid as a
+ * clustered pin) was removed — the dataset is slow to fetch and the 100
+ * curated seed locations are enough for the use case. Toggle bar now only
+ * exposes Off / Local.
  *
  * @author Jiahao
  */
@@ -51,24 +53,19 @@ function createSpotDivIcon() {
     });
 }
 
-/** Map reference captured during addMockLocationMarkers so later passes
- *  (seed / building / fountain renderers) can attach layers without
- *  re-threading the map instance through every call site. */
+/** Map reference captured during addMockLocationMarkers so the seed / fountain
+ *  renderers can attach layers without re-threading the map instance
+ *  through every call site. */
 var mapMarkersActiveMap = null;
 /** Layer for the 100 seed-spot pins (Local mode). */
 var seedSpotLayerGroup = null;
-/** MarkerClusterGroup (or LayerGroup fallback) for city-wide building pins. */
-var cityBuildingClusterGroup = null;
-/** Cached city-wide building list — passed once into renderCityBuildingPins
- *  and reused when the Local→City toggle requests show without a refetch. */
-var cityBuildingDataCache = null;
 /** Singleton layer group for fountain markers. */
 var fountainLayerGroup = null;
-/** Currently-selected building mode: 'off' | 'local' | 'city'. */
+/** Currently-selected building mode: 'off' | 'local'. */
 var currentBuildingMode = "local";
 
 /**
- * Capture the Leaflet map instance for use by the seed / building / fountain
+ * Capture the Leaflet map instance for use by the seed / fountain
  * renderers. Kept under the original name so pages/index.js does not have to
  * change call sites.
  *
@@ -77,64 +74,6 @@ var currentBuildingMode = "local";
  */
 function addMockLocationMarkers(map) {
     mapMarkersActiveMap = map;
-}
-
-/**
- * Find the seed spot closest to a given (lat, lng) using squared-degree
- * distance. Used so a city-mode building pin's detail panel can borrow the
- * neighbouring seed's name/summary as a label hint.
- *
- * @param {{lat: number, lng: number}} target
- * @param {Array<Object>} locations
- * @returns {Object|null} closest seed spot, or null if none qualified
- * @author Jiahao
- */
-function findClosestSpot(target, locations) {
-    if (!Array.isArray(locations) || !locations.length) return null;
-    var best = null;
-    var bestDist = Infinity;
-    for (var i = 0; i < locations.length; i++) {
-        var s = locations[i];
-        if (!s || typeof s.lat !== "number" || typeof s.lng !== "number") continue;
-        var dLat = s.lat - target.lat;
-        var dLng = s.lng - target.lng;
-        var d = dLat * dLat + dLng * dLng;
-        if (d < bestDist) {
-            bestDist = d;
-            best = s;
-        }
-    }
-    return best;
-}
-
-/**
- * Build a synthetic spot object for a city-mode building pin so the detail
- * panel has identity (id) + location (lat/lng) + a friendly summary. Real
- * weather / shade / risk values come from /api/risk via ensureSpotApiData
- * when the user actually opens the detail panel.
- *
- * @param {Object|null} parentSpot Closest seed (used only for the summary label)
- * @param {{ lat: number, lng: number }} building
- * @param {number} indexWithinParent 0-based, used to make the synthetic id stable
- * @returns {Object} spot compatible with openMapSpotDetail
- * @author Jiahao
- */
-function deriveBuildingSpot(parentSpot, building, indexWithinParent) {
-    var parentName = parentSpot && parentSpot.name ? parentSpot.name : "this area";
-    var coords = building.lat.toFixed(4) + ", " + building.lng.toFixed(4);
-    return {
-        id:
-            (parentSpot && parentSpot.id ? parentSpot.id : "spot") +
-            "-bld-" +
-            indexWithinParent,
-        name: "Building near " + parentName,
-        lat: building.lat,
-        lng: building.lng,
-        summary:
-            "Building footprint at " +
-            coords +
-            ". Live readings will load from /api/risk on open.",
-    };
 }
 
 /**
@@ -194,110 +133,34 @@ function renderSeedSpotPins(map, locations) {
         group.addTo(leafletMap);
     }
     // Always keep the prepared layer around even when the current mode is
-    // off/city — toggling back to Local then re-attaches without rebuilding.
+    // off — toggling back to Local then re-attaches without rebuilding.
     seedSpotLayerGroup = group;
 }
 
 /**
- * City mode: render every city-wide building footprint centroid as a green
- * pin. Uses Leaflet.markercluster when available so tens of thousands of
- * markers stay performant; falls back to a flat LayerGroup if the plugin
- * failed to load.
- *
- * The flat building list is cached on `cityBuildingDataCache` so toggling
- * city→off→city only rebuilds layers, no fetch.
- *
- * @param {Array<{lat: number, lng: number}>} buildings flat list from fetchAllCityBuildings
- * @param {Array<Object>} locations seed spots (used to attribute click → nearest seed name)
- * @author Jiahao
- */
-function renderCityBuildingPins(buildings, locations) {
-    if (!mapMarkersActiveMap) return;
-    if (cityBuildingClusterGroup) {
-        mapMarkersActiveMap.removeLayer(cityBuildingClusterGroup);
-        cityBuildingClusterGroup = null;
-    }
-    if (Array.isArray(buildings) && buildings.length) {
-        cityBuildingDataCache = buildings;
-    }
-    if (!Array.isArray(buildings) || !buildings.length) return;
-
-    var hasCluster = typeof L.markerClusterGroup === "function";
-    var group = hasCluster
-        ? L.markerClusterGroup({
-              chunkedLoading: true,
-              chunkInterval: 80,
-              chunkDelay: 32,
-              maxClusterRadius: 55,
-              showCoverageOnHover: false,
-              spiderfyOnMaxZoom: true,
-              disableClusteringAtZoom: 17,
-          })
-        : L.layerGroup();
-
-    var icon = createSpotDivIcon();
-    var locs = Array.isArray(locations) ? locations : [];
-
-    for (var i = 0; i < buildings.length; i++) {
-        var b = buildings[i];
-        if (
-            !b ||
-            typeof b.lat !== "number" ||
-            typeof b.lng !== "number" ||
-            isNaN(b.lat) ||
-            isNaN(b.lng)
-        ) {
-            continue;
-        }
-        var marker = L.marker([b.lat, b.lng], { icon: icon, title: "Building" });
-        (function (bld, idx) {
-            marker.on("click", function () {
-                var parent = findClosestSpot(bld, locs);
-                var derived = deriveBuildingSpot(parent, bld, idx);
-                openMapSpotDetail(derived);
-            });
-        })(b, i);
-        if (hasCluster) {
-            group.addLayer(marker);
-        } else {
-            marker.addTo(group);
-        }
-    }
-
-    if (currentBuildingMode === "city") {
-        if (hasCluster) {
-            mapMarkersActiveMap.addLayer(group);
-        } else {
-            group.addTo(mapMarkersActiveMap);
-        }
-    }
-    cityBuildingClusterGroup = group;
-}
-
-/**
- * Single source of truth for which pin layer (if any) is on the map. Detaches
- * the other mode's layer cleanly. Modes:
+ * Single source of truth for which pin layer (if any) is on the map. Modes:
  *   'off'   — no pins
  *   'local' — 100 seed spot pins (LayerGroup)
- *   'city'  — every city-wide building footprint (MarkerClusterGroup)
+ *
+ * The legacy 'city' mode (Vancouver-wide building cluster) was removed; any
+ * stale value coming from older persisted prefs is coerced to 'local' so the
+ * map is never left blank.
  *
  * Triggered from the floating toggle bar (mapToggleBar.js).
  *
- * @param {'off'|'local'|'city'} mode
+ * @param {'off'|'local'} mode
  * @param {Array<Object>} [locations] seed spots, used when first switching modes
  * @author Jiahao
  */
 function setBuildingsMode(mode, locations) {
-    var allowed = mode === "off" || mode === "local" || mode === "city";
-    if (!allowed) return;
+    if (mode !== "off" && mode !== "local") {
+        mode = "local";
+    }
     currentBuildingMode = mode;
     if (!mapMarkersActiveMap) return;
 
     if (seedSpotLayerGroup && mapMarkersActiveMap.hasLayer(seedSpotLayerGroup)) {
         mapMarkersActiveMap.removeLayer(seedSpotLayerGroup);
-    }
-    if (cityBuildingClusterGroup && mapMarkersActiveMap.hasLayer(cityBuildingClusterGroup)) {
-        mapMarkersActiveMap.removeLayer(cityBuildingClusterGroup);
     }
 
     if (mode === "local") {
@@ -306,19 +169,11 @@ function setBuildingsMode(mode, locations) {
         } else if (Array.isArray(locations) && locations.length) {
             renderSeedSpotPins(mapMarkersActiveMap, locations);
         }
-    } else if (mode === "city") {
-        if (cityBuildingClusterGroup) {
-            mapMarkersActiveMap.addLayer(cityBuildingClusterGroup);
-        } else if (cityBuildingDataCache && cityBuildingDataCache.length) {
-            renderCityBuildingPins(cityBuildingDataCache, locations || []);
-        }
-        // If no cache yet, pages/index.js is responsible for kicking the
-        // lazy fetchAllCityBuildings() then calling renderCityBuildingPins.
     }
 }
 
 /**
- * @returns {'off'|'local'|'city'}
+ * @returns {'off'|'local'}
  * @author Jiahao
  */
 function getBuildingsMode() {

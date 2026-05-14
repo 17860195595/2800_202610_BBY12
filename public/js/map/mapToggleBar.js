@@ -2,17 +2,22 @@
  * @file mapToggleBar.js
  * Floating switch bar overlaid on the map. Three controls:
  *
- *   Buildings : Off | Local | City  (segmented radio group)
- *   Fountains : on/off               (Bootstrap form-switch)
- *   Heat      : on/off               (Bootstrap form-switch)
+ *   Buildings : Off | On              (segmented radio group; "On" maps to
+ *                                       the internal 'local' value to keep
+ *                                       prefs + downstream code unchanged)
+ *   Fountains : on/off                (Bootstrap form-switch)
+ *   Heat      : on/off                (Bootstrap form-switch)
  *
- * Pure UI — does not own the layers. Emits two CustomEvents on window so
+ * Pure UI — does not own the layers. Emits CustomEvents on window so
  * pages/index.js (which holds the map + heat controller refs) can wire the
  * actual show/hide:
  *
- *   maptoggle:buildings  detail = { mode: 'off'|'local'|'city' }
+ *   maptoggle:buildings  detail = { mode: 'off'|'local' }
  *   maptoggle:fountains  detail = { visible: boolean }
  *   maptoggle:heat       detail = { visible: boolean }
+ *
+ * The legacy "City" option (Vancouver-wide building cluster) was removed —
+ * the dataset is slow to fetch and the curated 100 key locations are enough.
  *
  * @author Jiahao
  */
@@ -21,10 +26,11 @@
  *  positions. Keep the schema flat — bumping the version key wipes old prefs. */
 var MAP_TOGGLE_PREFS_KEY = "shadeSafe.mapTogglePrefs.v1";
 
-/** @typedef {{ buildingsMode: 'off'|'local'|'city', fountainsOn: boolean, heatOn: boolean }} MapTogglePrefs */
+/** @typedef {{ buildingsMode: 'off'|'local', fountainsOn: boolean, heatOn: boolean }} MapTogglePrefs */
 
 /**
- * Read persisted prefs with sensible defaults.
+ * Read persisted prefs with sensible defaults. A stale buildingsMode of
+ * 'city' from older builds is coerced to 'local' so the map still has pins.
  * @returns {MapTogglePrefs}
  * @author Jiahao
  */
@@ -35,13 +41,12 @@ function loadMapTogglePrefs() {
         if (!raw) return defaults;
         var parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== "object") return defaults;
+        var mode = parsed.buildingsMode;
+        if (mode !== "off" && mode !== "local") {
+            mode = defaults.buildingsMode;
+        }
         return {
-            buildingsMode:
-                parsed.buildingsMode === "off" ||
-                parsed.buildingsMode === "city" ||
-                parsed.buildingsMode === "local"
-                    ? parsed.buildingsMode
-                    : defaults.buildingsMode,
+            buildingsMode: mode,
             fountainsOn: typeof parsed.fountainsOn === "boolean" ? parsed.fountainsOn : true,
             heatOn: typeof parsed.heatOn === "boolean" ? parsed.heatOn : true,
         };
@@ -84,10 +89,12 @@ function ensureMapToggleBarDom() {
         '  <div class="btn-group btn-group-sm map-toggle-bar__seg" role="group">' +
         '    <input type="radio" class="btn-check" name="mtb-bld" id="mtb-bld-off" value="off" autocomplete="off" />' +
         '    <label class="btn btn-outline-success" for="mtb-bld-off">Off</label>' +
+        // Internal radio value stays "local" so the buildingsMode pref schema
+        // and downstream setBuildingsMode() keep working unchanged; only the
+        // user-visible label flipped to "On" for clarity now that "Local" is
+        // the only non-Off mode.
         '    <input type="radio" class="btn-check" name="mtb-bld" id="mtb-bld-local" value="local" autocomplete="off" />' +
-        '    <label class="btn btn-outline-success" for="mtb-bld-local">Local</label>' +
-        '    <input type="radio" class="btn-check" name="mtb-bld" id="mtb-bld-city" value="city" autocomplete="off" />' +
-        '    <label class="btn btn-outline-success" for="mtb-bld-city">City</label>' +
+        '    <label class="btn btn-outline-success" for="mtb-bld-local">On</label>' +
         '  </div>' +
         '</div>' +
         '<div class="map-toggle-bar__row">' +
