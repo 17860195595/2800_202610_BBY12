@@ -23,6 +23,7 @@ const { fetchWeatherData } = require("./services/weatherService.js");
 const { fetchTreeData } = require("./services/treeService.js");
 const { fetchBuildingData } = require("./services/buildingService.js");
 const { fetchWaterFountainData } = require("./services/waterFountainService.js");
+const { fetchWeatherGrid } = require("./services/weatherGridService.js");
 
 //setup express app
 const app = express();
@@ -291,6 +292,26 @@ app.get("/api/risk", async (req, res) => {
   catch (error) {
     console.error('Error fetching weather data:', error);
     res.status(500).json({ error: 'Failed to fetch weather data' });
+  }
+});
+
+/**
+ * Added by @Jiahao
+ *
+ * Returns a single batched snapshot of real weather data over a coarse grid
+ * covering Vancouver. The frontend heat layer (mapHeat.js) consumes this on
+ * page load to draw the heat map from live values instead of the
+ * mock-synthesized series in mockMapLocations.js. One HTTP call to
+ * open-meteo, 30 stations, 24-hour densified series each.
+ */
+app.get("/api/weather-grid", async (req, res) => {
+  try {
+    const stations = await fetchWeatherGrid();
+    res.json({ stations: stations, fetchedAt: new Date().toISOString() });
+  }
+  catch (error) {
+    console.error('Error fetching weather grid:', error);
+    res.status(500).json({ error: 'Failed to fetch weather grid' });
   }
 });
 

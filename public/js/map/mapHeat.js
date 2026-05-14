@@ -33,8 +33,43 @@
 (function (global) {
     "use strict";
 
+    /** Live weather stations from /api/weather-grid. When set, the heat layer
+     *  uses these as its source instead of the mock-synthesized series on
+     *  MOCK_MAP_LOCATIONS. Kept in module memory only — no localStorage —
+     *  so a hard reload always re-fetches.
+     *  @type {Array<{lat:number,lng:number,hourly24:Array<Object>}>|null} */
+    var liveHeatStations = null;
+
     /**
-     * Collect station lat/lng and the temperature at the chosen hour (from mock hourly arrays).
+     * Swap in (or out) the live weather stations that drive the heat layer.
+     * Pass an array → live data wins on the next refresh. Pass null → revert
+     * to the mock-synthesized source.
+     *
+     * Recomputes the global temperature range so the gradient anchors to the
+     * new data span (mock and live can be ±5 °C apart for the same hour).
+     *
+     * @param {Array<{lat:number,lng:number,hourly24:Array<Object>}>|null} stations
+     * @author Jiahao
+     */
+    function setLiveHeatStations(stations) {
+        if (Array.isArray(stations) && stations.length) {
+            liveHeatStations = stations;
+        } else {
+            liveHeatStations = null;
+        }
+    }
+
+    /** Whether live weather is currently in use (for diagnostics / UI). */
+    function isUsingLiveHeatStations() {
+        return Array.isArray(liveHeatStations) && liveHeatStations.length > 0;
+    }
+
+    /**
+     * Collect station lat/lng and the temperature at the chosen hour. Prefers
+     * the live /api/weather-grid stations when available; otherwise falls
+     * back to the mock-synthesized series so the layer renders something the
+     * very first paint, before /api/weather-grid resolves.
+     *
      * @param {number} hour 0–23
      * @returns {Array<{ lat: number, lng: number, tempC: number }>}
      * @author Jiahao
@@ -42,6 +77,26 @@
     function getMockHeatStationsAtHour(hour) {
         if (hour < 0) hour = 0;
         if (hour > 23) hour = 23;
+
+        if (liveHeatStations) {
+            var liveOut = [];
+            for (var li = 0; li < liveHeatStations.length; li++) {
+                var st = liveHeatStations[li];
+                if (
+                    !st ||
+                    typeof st.lat !== "number" ||
+                    typeof st.lng !== "number" ||
+                    !Array.isArray(st.hourly24)
+                ) {
+                    continue;
+                }
+                var ls = st.hourly24[hour];
+                if (!ls || typeof ls.tempC !== "number" || isNaN(ls.tempC)) continue;
+                liveOut.push({ lat: st.lat, lng: st.lng, tempC: ls.tempC });
+            }
+            if (liveOut.length) return liveOut;
+        }
+
         var rows =
             typeof MOCK_MAP_LOCATIONS !== "undefined" && Array.isArray(MOCK_MAP_LOCATIONS)
                 ? MOCK_MAP_LOCATIONS
@@ -57,7 +112,7 @@
             ) {
                 continue;
             }
-            var hourly = getSpotHourly(spot);
+            var hourly = getSpotMockHourly(spot);
             var snap = hourly[hour];
             var t =
                 snap && typeof snap.tempC === "number" && !isNaN(snap.tempC) ? snap.tempC : null;
@@ -70,95 +125,86 @@
     }
 
     /**
-     * Build L.heatLayer options for a given clock hour.
-     * dayness ≈ sin-shaped curve peaking mid-day: drives gradient palette, max, and minOpacity.
-     * Night: cool-only stops + lower max → faint blue/teal field. Day: full spectral + higher max.
+     * Single full-spectrum gradient used at every hour. With the absolute
+     * temperature scale (see ABS_TEMP_RANGE) the color of each pixel is
+     * anchored to the °C value itself, not to "how warm vs the rest of the
+     * day" — so a 12 °C cool morning reads as blue/cyan and a 30 °C heat
+     * wave reads as orange/red regardless of clock hour.
+     *
+     * Tuned for Vancouver's typical 0–35 °C envelope:
+     *   < ~5 °C  → transparent / dark indigo
+     *   ~10 °C   → blue
+     *   ~15 °C   → cyan
+     *   ~20 °C   → green / yellow
+     *   ~25 °C   → yellow / orange
+     *   > ~32 °C → red
+     */
+    var ABS_HEAT_GRADIENT = {
+        0.0: "rgba(55, 48, 163, 0)",
+        0.15: "rgba(59, 130, 246, 0.5)",
+        0.35: "rgba(34, 211, 238, 0.6)",
+        0.5: "rgba(52, 211, 153, 0.68)",
+        0.65: "rgba(250, 204, 21, 0.78)",
+        0.85: "rgba(249, 115, 22, 0.86)",
+        1.0: "rgba(220, 38, 38, 0.92)",
+    };
+
+    /**
+     * Build L.heatLayer options for a given clock hour. With the absolute
+     * temperature scale we keep one constant gradient and only let the hour
+     * lightly modulate overall brightness (minOpacity) — enough to keep the
+     * time slider visually feeling alive without overwriting the
+     * temperature-driven color.
+     *
      * @param {number} hour 0–23
-     * @returns {Object} Leaflet.heat options (radius, blur, gradient, max, minOpacity, maxZoom)
+     * @returns {Object} Leaflet.heat options
      * @author Jiahao
      */
     function getMockHeatLayerOptionsForHour(hour) {
         if (hour < 0) hour = 0;
         if (hour > 23) hour = 23;
         var dayness = Math.max(0, Math.min(1, Math.sin(((hour - 4) / 15) * Math.PI)));
-        var opts = {
+        return {
             radius: 46,
             blur: 30,
             maxZoom: 18,
-            minOpacity: 0.05 + dayness * 0.14,
-            max: 0.38 + dayness * 0.58,
+            minOpacity: 0.12 + dayness * 0.08,
+            max: 1.0,
+            gradient: ABS_HEAT_GRADIENT,
         };
-        if (dayness < 0.38) {
-            opts.gradient = {
-                0.0: "rgba(30, 27, 75, 0)",
-                0.3: "rgba(67, 56, 202, 0.42)",
-                0.55: "rgba(37, 99, 235, 0.52)",
-                0.78: "rgba(14, 165, 233, 0.58)",
-                1.0: "rgba(45, 212, 191, 0.62)",
-            };
-        } else if (dayness < 0.68) {
-            opts.gradient = {
-                0.0: "rgba(55, 48, 163, 0)",
-                0.22: "rgba(59, 130, 246, 0.48)",
-                0.42: "rgba(34, 211, 238, 0.58)",
-                0.58: "rgba(52, 211, 153, 0.68)",
-                0.72: "rgba(250, 204, 21, 0.78)",
-                0.88: "rgba(249, 115, 22, 0.86)",
-                1.0: "rgba(220, 38, 38, 0.92)",
-            };
-        } else {
-            opts.gradient = {
-                0.0: "rgba(88, 28, 135, 0)",
-                0.12: "rgba(99, 102, 241, 0.35)",
-                0.28: "rgba(59, 130, 246, 0.55)",
-                0.42: "rgba(6, 182, 212, 0.65)",
-                0.55: "rgba(52, 211, 153, 0.72)",
-                0.68: "rgba(250, 204, 21, 0.82)",
-                0.82: "rgba(249, 115, 22, 0.88)",
-                1.0: "rgba(185, 28, 28, 0.95)",
-            };
-        }
-        return opts;
     }
 
-    /** Lazily computed once: global °C bounds over every spot × every hour in mock data. */
-    var mockHeatGlobalTempRangeCache = null;
+    /**
+     * Absolute temperature anchor for the gradient. A cool day will render in
+     * blues/cyans because 12 °C maps to ~0.34 of the scale; a hot day will
+     * render in oranges/reds because 28 °C maps to ~0.8.
+     *
+     * Tuned for Vancouver's climate envelope (≈ -5..35 °C in extreme years,
+     * 0..32 °C in the regular year). Temps below MIN are clamped to "barely
+     * visible blue"; temps above MAX saturate to full red.
+     */
+    var ABS_TEMP_RANGE = { min: 0, max: 35 };
 
     /**
-     * Min/max temperature across all mock hourly samples, with small padding.
-     * Using one scale for all hours avoids “every hour looks the same” after normalization.
+     * Return the fixed absolute °C range. Kept as a function (instead of
+     * inlining ABS_TEMP_RANGE) so the rest of the rendering pipeline doesn't
+     * need to know whether the scale is data-driven or constant.
+     *
      * @returns {{ min: number, max: number }}
      * @author Jiahao
      */
     function getMockHeatGlobalTempRange() {
-        if (mockHeatGlobalTempRangeCache) {
-            return mockHeatGlobalTempRangeCache;
-        }
-        var minV = Infinity;
-        var maxV = -Infinity;
-        var rows =
-            typeof MOCK_MAP_LOCATIONS !== "undefined" && Array.isArray(MOCK_MAP_LOCATIONS)
-                ? MOCK_MAP_LOCATIONS
-                : [];
-        var i;
-        var h;
-        for (i = 0; i < rows.length; i++) {
-            var hourly = getSpotHourly(rows[i]);
-            for (h = 0; h < hourly.length; h++) {
-                var tc = hourly[h] && hourly[h].tempC;
-                if (typeof tc === "number" && !isNaN(tc)) {
-                    minV = Math.min(minV, tc);
-                    maxV = Math.max(maxV, tc);
-                }
-            }
-        }
-        if (!isFinite(minV) || !isFinite(maxV)) {
-            mockHeatGlobalTempRangeCache = { min: 12, max: 28 };
-        } else {
-            var pad = (maxV - minV) * 0.06 || 0.4;
-            mockHeatGlobalTempRangeCache = { min: minV - pad, max: maxV + pad };
-        }
-        return mockHeatGlobalTempRangeCache;
+        return ABS_TEMP_RANGE;
+    }
+
+    /**
+     * No-op in absolute-scale mode (the range never changes). Kept for
+     * backward compatibility with pages/index.js which calls it after a
+     * data swap; safe to leave wired up.
+     * @author Jiahao
+     */
+    function resetMockHeatGlobalTempRangeCache() {
+        // Absolute scale → nothing to invalidate.
     }
 
     /**
@@ -189,15 +235,18 @@
     }
 
     /**
-     * Extra scalar applied to all heat intensities by hour (dawn low, afternoon high).
-     * Complements temperature data so the layer “dims” at night even when blur is heavy.
+     * Soft hour-of-day scalar applied on top of the temperature-driven
+     * intensity. With absolute-scale colors we want the °C value to dominate
+     * the look, so the night-time dimming stays gentle ([0.55, 1.0]) instead
+     * of crushing warm summer evenings down to nothing.
+     *
      * @param {number} hour 0–23
-     * @returns {number} Multiplier in roughly [0.08, 1]
+     * @returns {number} Multiplier in [0.55, 1.0]
      * @author Jiahao
      */
     function mockHeatDiurnalIntensityWeight(hour) {
         var sun = Math.max(0, Math.min(1, Math.sin(((hour - 4) / 15) * Math.PI)));
-        return 0.08 + 0.92 * sun;
+        return 0.55 + 0.45 * sun;
     }
 
     /**
@@ -260,16 +309,19 @@
             }
         }
 
-        var rows =
-            typeof MOCK_MAP_LOCATIONS !== "undefined" && Array.isArray(MOCK_MAP_LOCATIONS)
+        // Compute bbox from whichever station source is active so the IDW
+        // backfill grid (below) always covers the same area users see in pins.
+        var bboxRows = liveHeatStations && liveHeatStations.length
+            ? liveHeatStations
+            : (typeof MOCK_MAP_LOCATIONS !== "undefined" && Array.isArray(MOCK_MAP_LOCATIONS)
                 ? MOCK_MAP_LOCATIONS
-                : [];
+                : []);
         var minLat = Infinity;
         var maxLat = -Infinity;
         var minLng = Infinity;
         var maxLng = -Infinity;
-        for (i = 0; i < rows.length; i++) {
-            var sp = rows[i];
+        for (i = 0; i < bboxRows.length; i++) {
+            var sp = bboxRows[i];
             if (typeof sp.lat !== "number" || typeof sp.lng !== "number") continue;
             minLat = Math.min(minLat, sp.lat);
             maxLat = Math.max(maxLat, sp.lat);
@@ -308,15 +360,24 @@
     /**
      * Factory: owns the heat layer reference and replaces the layer on each refresh
      * (workaround for Leaflet.heat redraw throttling — see file header).
+     *
+     * Returns:
+     *   refresh(hour)        – rebuild the layer for an hour 0..23
+     *   setVisible(boolean)  – temporarily hide/show without losing the layer
+     *   isVisible()          – current toggle state (true by default)
+     *
      * @param {L.Map} map
-     * @returns {{ refresh: function(number): void }}
+     * @returns {{ refresh: function(number): void, setVisible: function(boolean): void, isVisible: function(): boolean }}
      * @author Jiahao
      */
     function createMapHeatController(map) {
         var mockHeatLayer = null;
+        var visible = true;
 
         /**
-         * Rebuild the heat layer for the chosen hour.
+         * Rebuild the heat layer for the chosen hour. Honors the visible flag
+         * so toggling Heat off then scrubbing the time slider does not pop
+         * the layer back on.
          * @param {number} hour
          * @author Jiahao
          */
@@ -331,13 +392,34 @@
                 map.removeLayer(mockHeatLayer);
                 mockHeatLayer = null;
             }
-            if (pts.length) {
+            if (visible && pts.length) {
                 mockHeatLayer = L.heatLayer(pts, getMockHeatLayerOptionsForHour(hour)).addTo(map);
             }
         }
 
-        return { refresh: refresh };
+        /**
+         * @param {boolean} v
+         * @author Jiahao
+         */
+        function setVisible(v) {
+            visible = !!v;
+            if (!visible && mockHeatLayer) {
+                map.removeLayer(mockHeatLayer);
+                mockHeatLayer = null;
+            } else if (visible && !mockHeatLayer) {
+                refresh(typeof parseMapTimeHour === "function" ? parseMapTimeHour() : 12);
+            }
+        }
+
+        function isVisible() {
+            return visible;
+        }
+
+        return { refresh: refresh, setVisible: setVisible, isVisible: isVisible };
     }
 
     global.createMapHeatController = createMapHeatController;
+    global.resetMockHeatGlobalTempRangeCache = resetMockHeatGlobalTempRangeCache;
+    global.setLiveHeatStations = setLiveHeatStations;
+    global.isUsingLiveHeatStations = isUsingLiveHeatStations;
 })(window);

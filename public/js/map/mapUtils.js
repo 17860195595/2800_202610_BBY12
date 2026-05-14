@@ -3,10 +3,10 @@
  * Small, stateless helpers shared across the map page modules.
  *
  * Consumers:
- *   - mapHeat.js      — needs getSpotHourly() for temperature-driven layers
- *   - mapSpotDetail.js — needs escapeHtmlMap, formatShadeScore, parseMapTimeHour, getSpotHourly
+ *   - mapHeat.js       — needs getSpotMockHourly() for the synthetic temperature layer
+ *   - mapSpotDetail.js — needs escapeHtmlMap, formatShadeScore, parseMapTimeHour, getSpotApiHourly
  *
- * Load after: js/data/mockMapLocations.js (provides buildMockHourlySeries when spot.hourly is absent).
+ * Load after: js/data/mockMapLocations.js (provides buildMockHourlySeries when spot.mockHourly is absent).
  * @author Jiahao
  */
 
@@ -52,18 +52,42 @@ function parseMapTimeHour() {
 }
 
 /**
- * Return the 24 hourly records for one spot.
- * Prefer spot.hourly (attached by mockMapLocations.js); otherwise synthesize via buildMockHourlySeries.
+ * Return the synthetic 24-hour series used to drive the heat layer.
+ * Prefers the precomputed spot.mockHourly (attached by mockMapLocations.js);
+ * falls back to building it on the fly if missing.
+ *
+ * IMPORTANT: this is mock-only. The detail panel must NEVER render this — it
+ * uses getSpotApiHourly so users only see real /api/risk numbers.
+ *
  * @param {Object} spot Location row from MOCK_MAP_LOCATIONS
  * @returns {Array<Object>} Up to 24 hourly snapshots
  * @author Jiahao
  */
-function getSpotHourly(spot) {
-    if (spot.hourly && spot.hourly.length === 24) {
-        return spot.hourly;
+function getSpotMockHourly(spot) {
+    if (!spot) return [];
+    if (Array.isArray(spot.mockHourly) && spot.mockHourly.length === 24) {
+        return spot.mockHourly;
     }
     if (typeof buildMockHourlySeries === "function") {
         return buildMockHourlySeries(spot);
     }
     return [];
+}
+
+/**
+ * Return the real 24-hour series fetched from /api/risk for this spot, or
+ * null if it has not been fetched yet. Detail panel uses this exclusively so
+ * the user only ever sees live numbers; while this is null the panel shows
+ * its loading state.
+ *
+ * @param {Object} spot
+ * @returns {Array<Object>|null}
+ * @author Jiahao
+ */
+function getSpotApiHourly(spot) {
+    if (!spot) return null;
+    if (Array.isArray(spot.apiHourly) && spot.apiHourly.length === 24) {
+        return spot.apiHourly;
+    }
+    return null;
 }

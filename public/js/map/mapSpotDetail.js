@@ -1,8 +1,15 @@
 /**
  * @file mapSpotDetail.js
- * Location detail “sheet”: dialog panel above the map (below the bottom dock), stats, 24h bar chart.
+ * Location detail "sheet": dialog panel above the map (below the bottom dock), stats, 24h bar chart.
  *
- * Depends on: mapUtils.js — escapeHtmlMap, formatShadeScore, parseMapTimeHour, getSpotHourly
+ * Live-data only: the panel renders nothing but values returned from
+ * /api/risk. When the user opens a pin we kick off ensureSpotApiData(spot),
+ * show a loading state until it resolves, and only then populate the stats
+ * and bar chart. The mock series attached in mockMapLocations.js is reserved
+ * for the heat layer and is intentionally not consumed here.
+ *
+ * Depends on: mapUtils.js — escapeHtmlMap, formatShadeScore, parseMapTimeHour,
+ * getSpotApiHourly; services/mapApi.js — ensureSpotApiData.
  *
  * Styling: public/css/pages/map.css (panel, chart, tier colors). z-index stays under the tab bar.
  *
@@ -10,6 +17,9 @@
  *   - Bar click → time slider: programmatic value change does not fire "input" natively; we
  *     dispatch input + change with bubbles:true so initMapTimeRail and the heat refresh listener run.
  *   - UV row uses innerHTML only after escapeHtmlMap on the label fragment; numeric parts are plain text.
+ *   - Race-safe loading: when the user clicks pin A, then immediately pin B,
+ *     A's resolved fetch must not overwrite the panel that is now showing B.
+ *     We guard renders with the currentSpot identity check.
  * @author Jiahao
  */
 
@@ -48,6 +58,8 @@ function mapTempTierFromCelsius(tempC) {
  * @property {HTMLElement|null} summaryEl
  * @property {HTMLElement|null} statsEl
  * @property {HTMLElement|null} chartEl
+ * @property {HTMLElement|null} stateEl
+ * @property {HTMLButtonElement|null} retryBtn
  * @property {HTMLButtonElement|null} closeBtn
  * @property {Object|null} currentSpot
  */
@@ -62,6 +74,8 @@ var mapSpotDetailUi = {
     summaryEl: null,
     statsEl: null,
     chartEl: null,
+    stateEl: null,
+    retryBtn: null,
     closeBtn: null,
     currentSpot: null,
 };
@@ -128,6 +142,25 @@ function ensureMapSpotDetailUi() {
     var summary = document.createElement("p");
     summary.className = "map-spot-detail-panel__summary";
 
+    // The state element doubles as both loading and error display. Hidden
+    // entirely once live data lands so it does not leave a dead row in the
+    // panel. role="status" + aria-live keeps screen readers in the loop.
+    var state = document.createElement("div");
+    state.className = "map-spot-detail-panel__state";
+    state.setAttribute("role", "status");
+    state.setAttribute("aria-live", "polite");
+    state.hidden = true;
+
+    var retryBtn = document.createElement("button");
+    retryBtn.type = "button";
+    retryBtn.className = "map-spot-detail-panel__retry";
+    retryBtn.textContent = "Retry";
+    retryBtn.hidden = true;
+    retryBtn.addEventListener("click", function () {
+        if (!mapSpotDetailUi.currentSpot) return;
+        beginSpotApiLoad(mapSpotDetailUi.currentSpot);
+    });
+
     var stats = document.createElement("dl");
     stats.className = "map-spot-detail-panel__stats";
 
@@ -158,9 +191,11 @@ function ensureMapSpotDetailUi() {
 
     var note = document.createElement("p");
     note.className = "map-spot-detail-panel__note";
-    note.textContent = "Mock data for UI only.";
+    note.textContent = "Live readings from /api/risk for this exact location.";
 
     body.appendChild(summary);
+    body.appendChild(state);
+    body.appendChild(retryBtn);
     body.appendChild(stats);
     body.appendChild(chartSection);
     body.appendChild(note);
@@ -179,6 +214,8 @@ function ensureMapSpotDetailUi() {
     mapSpotDetailUi.summaryEl = summary;
     mapSpotDetailUi.statsEl = stats;
     mapSpotDetailUi.chartEl = chart;
+    mapSpotDetailUi.stateEl = state;
+    mapSpotDetailUi.retryBtn = retryBtn;
     mapSpotDetailUi.closeBtn = closeBtn;
 }
 
@@ -188,45 +225,54 @@ function ensureMapSpotDetailUi() {
  * @author Jiahao
  */
 function formatDetailTemp(snap) {
-    if (typeof snap.tempC === "number" && !isNaN(snap.tempC)) {
+    if (snap && typeof snap.tempC === "number" && !isNaN(snap.tempC)) {
         return snap.tempC + "°C";
     }
     return "—";
 }
 
 /**
- * Render the definition list for the selected hour’s snapshot.
- * Only the UV row mixes HTML (escaped uvLevel); other rows use textContent.
+ * Render the definition list for the selected hour's snapshot. Pass null/{}
+ * during the loading state so every row collapses to em dashes — visually
+ * differentiating "not loaded yet" from a real reading of zero.
  * @param {HTMLElement} statsEl
- * @param {Object} snap Hourly row from getSpotHourly
+ * @param {Object|null} snap Hourly row from getSpotApiHourly, or null while loading
  * @author Jiahao
  */
 function renderDetailStats(statsEl, snap) {
     statsEl.textContent = "";
+    var s = snap || {};
     var rows = [
-        { label: "Temperature", value: formatDetailTemp(snap) },
+        { label: "Temperature", value: formatDetailTemp(s) },
         {
             label: "UV index",
             value:
-                (typeof snap.uvIndex === "number" && !isNaN(snap.uvIndex) ? String(snap.uvIndex) : "—") +
-                (snap.uvLevel ? " (" + escapeHtmlMap(snap.uvLevel) + ")" : ""),
+                (typeof s.uvIndex === "number" && !isNaN(s.uvIndex) ? String(s.uvIndex) : "—") +
+                (s.uvLevel ? " (" + escapeHtmlMap(s.uvLevel) + ")" : ""),
             rawHtmlValue: true,
         },
         {
             label: "Humidity",
             value:
-                typeof snap.humidityPct === "number" && !isNaN(snap.humidityPct)
-                    ? snap.humidityPct + "%"
+                typeof s.humidityPct === "number" && !isNaN(s.humidityPct)
+                    ? s.humidityPct + "%"
                     : "—",
         },
         {
             label: "Wind",
             value:
-                typeof snap.windKmh === "number" && !isNaN(snap.windKmh)
-                    ? snap.windKmh + " km/h"
+                typeof s.windKmh === "number" && !isNaN(s.windKmh)
+                    ? s.windKmh + " km/h"
                     : "—",
         },
-        { label: "Shade coverage", value: formatShadeScore(snap.shadeScore) },
+        { label: "Shade coverage", value: formatShadeScore(s.shadeScore) },
+        {
+            label: "Heat risk",
+            value:
+                typeof s.riskScore === "number" && !isNaN(s.riskScore)
+                    ? Math.round(Math.max(0, Math.min(1, s.riskScore)) * 100) + "%"
+                    : "—",
+        },
     ];
 
     for (var i = 0; i < rows.length; i++) {
@@ -247,19 +293,23 @@ function renderDetailStats(statsEl, snap) {
 }
 
 /**
- * 24 buttons laid out as a mini bar chart; height encodes temp within the day’s min–max for this spot.
- * CSS classes encode LOW/MID/HIGH tier per bar for green/orange/red fills.
- * Each bar uses an IIFE (function (hour) { ... })(h) so the click handler closes over the correct index.
+ * 24 buttons laid out as a mini bar chart. Pass null/[] while data is loading
+ * to render an empty placeholder; otherwise heights encode temp within the
+ * day's min–max for this spot. CSS classes encode LOW/MID/HIGH tier per bar.
+ * Each bar uses an IIFE (function (hour) { ... })(h) so the click handler
+ * closes over the correct index.
  * @param {HTMLElement} chartEl
- * @param {Array<Object>} hourly
- * @param {number} selectedHour Current map time rail hour
+ * @param {Array<Object>|null} hourly  null while loading
+ * @param {number} selectedHour
  * @author Jiahao
  */
 function renderTemperatureBars(chartEl, hourly, selectedHour) {
     chartEl.textContent = "";
-    if (!hourly.length) {
+    if (!hourly || !hourly.length) {
+        chartEl.classList.add("map-spot-detail-chart--empty");
         return;
     }
+    chartEl.classList.remove("map-spot-detail-chart--empty");
 
     var temps = [];
     for (var t = 0; t < hourly.length; t++) {
@@ -326,7 +376,84 @@ function renderTemperatureBars(chartEl, hourly, selectedHour) {
 }
 
 /**
+ * Update the inline status row above the stats. Pass null to hide it; the
+ * retry button only shows up in the "error" state. Stays out of the way once
+ * live data lands so the panel reads clean.
+ * @param {{ kind: 'loading'|'error'|'no-data'|'idle', message?: string }|null} state
+ * @author Jiahao
+ */
+function setMapSpotDetailState(state) {
+    var ui = mapSpotDetailUi;
+    if (!ui.stateEl || !ui.retryBtn) return;
+    if (!state || state.kind === "idle") {
+        ui.stateEl.hidden = true;
+        ui.stateEl.textContent = "";
+        ui.stateEl.className = "map-spot-detail-panel__state";
+        ui.retryBtn.hidden = true;
+        if (ui.panel) ui.panel.classList.remove("is-loading");
+        return;
+    }
+    ui.stateEl.hidden = false;
+    ui.stateEl.textContent = state.message || "";
+    ui.stateEl.className =
+        "map-spot-detail-panel__state map-spot-detail-panel__state--" + state.kind;
+    ui.retryBtn.hidden = state.kind !== "error";
+    if (ui.panel) {
+        if (state.kind === "loading") {
+            ui.panel.classList.add("is-loading");
+        } else {
+            ui.panel.classList.remove("is-loading");
+        }
+    }
+}
+
+/**
+ * Kick off (or re-kick) ensureSpotApiData for the given spot. Updates the
+ * panel state to "loading", and on resolution re-renders — but only if the
+ * panel is still pointed at the same spot (the user may have clicked
+ * elsewhere mid-fetch).
+ * @param {Object} spot
+ * @author Jiahao
+ */
+function beginSpotApiLoad(spot) {
+    if (!spot) return;
+    if (typeof ensureSpotApiData !== "function") {
+        setMapSpotDetailState({
+            kind: "error",
+            message: "Live data client unavailable.",
+        });
+        return;
+    }
+    setMapSpotDetailState({ kind: "loading", message: "Loading live readings…" });
+    syncMapSpotDetailPanel();
+
+    ensureSpotApiData(spot)
+        .then(function () {
+            if (mapSpotDetailUi.currentSpot !== spot) return;
+            if (spot.dataSource === "no-data") {
+                setMapSpotDetailState({
+                    kind: "no-data",
+                    message: "No readings available for this location right now.",
+                });
+            } else {
+                setMapSpotDetailState(null);
+            }
+            syncMapSpotDetailPanel();
+        })
+        .catch(function () {
+            if (mapSpotDetailUi.currentSpot !== spot) return;
+            setMapSpotDetailState({
+                kind: "error",
+                message: "Could not load live readings. Tap retry to try again.",
+            });
+            syncMapSpotDetailPanel();
+        });
+}
+
+/**
  * Open the detail panel for a spot and sync to the current time rail hour.
+ * Triggers a lazy /api/risk fetch if this spot has never been hydrated; the
+ * panel shows a loading state until the response lands.
  * @param {Object} spot
  * @author Jiahao
  */
@@ -337,7 +464,14 @@ function openMapSpotDetail(spot) {
     mapSpotDetailUi.panel.hidden = false;
     mapSpotDetailUi.backdrop.setAttribute("aria-hidden", "false");
     mapSpotDetailUi.panel.setAttribute("aria-hidden", "false");
-    syncMapSpotDetailPanel();
+
+    if (getSpotApiHourly(spot)) {
+        setMapSpotDetailState(null);
+        syncMapSpotDetailPanel();
+    } else {
+        beginSpotApiLoad(spot);
+    }
+
     if (mapSpotDetailUi.closeBtn) {
         mapSpotDetailUi.closeBtn.focus();
     }
@@ -356,6 +490,7 @@ function closeMapSpotDetail() {
     mapSpotDetailUi.backdrop.setAttribute("aria-hidden", "true");
     mapSpotDetailUi.panel.setAttribute("aria-hidden", "true");
     mapSpotDetailUi.currentSpot = null;
+    setMapSpotDetailState(null);
 }
 
 /**
@@ -372,8 +507,10 @@ function getMapSpotDetailCurrentSpot() {
 }
 
 /**
- * Called on maptimechange (when the sheet may be closed) and when opening a spot.
- * No-ops if no spot or panel is hidden — avoids wasted DOM work.
+ * Called on maptimechange (when the sheet may be closed) and when opening a
+ * spot. No-ops if no spot or panel is hidden — avoids wasted DOM work. Only
+ * renders real /api/risk numbers; while data is still loading the stats and
+ * chart fall back to an empty/dash state instead of synthetic values.
  * @author Jiahao
  */
 function syncMapSpotDetailPanel() {
@@ -386,12 +523,13 @@ function syncMapSpotDetailPanel() {
     var label =
         document.body.dataset.mapTimeHm ||
         (hour < 10 ? "0" + hour : String(hour)) + ":00";
-    var hourly = getSpotHourly(spot);
-    var snap = hourly[hour] || {};
+
+    var hourly = getSpotApiHourly(spot);
+    var snap = hourly ? hourly[hour] : null;
 
     mapSpotDetailUi.titleEl.textContent = spot.name || "Location";
 
-    var tier = mapTempTierFromCelsius(snap.tempC);
+    var tier = mapTempTierFromCelsius(snap ? snap.tempC : NaN);
     mapSpotDetailUi.tempTierEl.textContent = tier.label;
     mapSpotDetailUi.tempTierEl.className =
         "map-spot-detail-panel__temp-tier map-spot-detail-panel__temp-tier--" + tier.tier;
