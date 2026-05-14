@@ -154,8 +154,36 @@ body:has(#map-report-modal.show) > .modal-backdrop {
   min-height: 1.25rem;
 }
 
+.map-report-status--info {
+  color: rgba(20, 34, 26, 0.72);
+}
+
+.map-report-status--error {
+  color: #9c1818;
+}
+
+.map-report-status--success {
+  color: var(--primary-green-dark);
+}
+
+#map-report-modal .map-report-submit-btn.is-busy {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 @media (min-width: 48rem) {
   #map-report-modal .modal-dialog {
     max-width: 24rem;
   }
+}
+
+/* Success toast: above report modal (1220) and toggle bar */
+.map-report-success-toast-wrap {
+  top: calc(env(safe-area-inset-top, 0rem) + 4.25rem);
+  z-index: 1250;
+  max-width: min(22rem, calc(100vw - 1.5rem));
+}
+
+.map-report-success-toast-wrap .toast {
+  min-width: 16rem;
 }

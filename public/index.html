@@ -103,15 +103,14 @@
               ></button>
             </div>
             <p class="small text-muted mb-0 mt-2 pe-4">
-              Tell us what it feels like on the ground. Data is not saved yet.
+              Tell us what it feels like on the ground — your report drops a pin for everyone else.
             </p>
           </div>
           <div class="modal-body pt-2">
             <div class="map-report-field mb-3">
               <p class="map-report-label">Location</p>
               <p class="map-report-location-hint mb-0" id="map-report-location-hint">
-                This report will use your current position from the device. Location capture is not
-                wired up yet — coordinates will be added later.
+                We try your device location first. If access is blocked, your report is saved at Vancouver city centre — you can still submit.
               </p>
             </div>
             <fieldset class="map-report-field map-report-field--fieldset mb-3" id="map-report-type-fieldset">
@@ -145,6 +144,33 @@
               Submit
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report success: Bootstrap toast (above map modals) -->
+    <div
+      class="toast-container position-fixed end-0 p-3 map-report-success-toast-wrap"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <div
+        id="map-report-success-toast"
+        class="toast align-items-center text-bg-success border-0 shadow"
+        role="alert"
+        data-bs-autohide="true"
+        data-bs-delay="4500"
+      >
+        <div class="d-flex">
+          <div class="toast-body fw-semibold pe-2" id="map-report-success-toast-body">
+            Report submitted successfully.
+          </div>
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
         </div>
       </div>
     </div>
@@ -214,6 +240,9 @@
     <script src="js/map/mapUtils.js"></script>
     <script src="js/map/mapHeat.js"></script>
     <script src="js/map/mapSpotDetail.js"></script>
+    <script src="js/map/mapUserLocation.js"></script>
+    <script src="js/map/mapReportMarkers.js"></script>
+    <script src="js/services/reportApi.js"></script>
     <script src="js/map/mapReport.js"></script>
     <script src="js/map/mapMarkers.js"></script>
     <script src="js/map/mapTimeRail.js"></script>

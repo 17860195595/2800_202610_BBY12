@@ -1,9 +1,20 @@
 /**
  * @file mapReport.js
- * Map report — wires Bootstrap 5 modal (#map-report-modal) for show/hide and submit.
- * Markup: index.html. Theme: css/components/mapReport.css
  *
- * Submit is client-only (console) until user accounts / API are wired.
+ * Map report — wires the Bootstrap 5 modal (#map-report-modal) for show /
+ * hide and submit, captures the user's GPS via getUserPosition, then POSTs
+ * the report to /api/reports. On success it dispatches a window event so
+ * pages/index.js can drop the new marker on the map without a re-fetch:
+ *
+ *   maptoggle:report-created   detail = { report }
+ *
+ * Markup: index.html  ·  Theme: css/components/mapReport.css
+ *
+ * Failure paths surface a clear inline status (permission denied, fix
+ * timed out, server offline, etc.) without dismissing the modal so the
+ * user can retry. Geolocation failures fall back to the same Vancouver
+ * default centre as the map so a report can still be saved.
+ *
  * @author Jiahao
  */
 
@@ -12,6 +23,44 @@ var mapReportOpen = false;
 
 /** @type {boolean} */
 var mapReportListenersBound = false;
+
+/** @type {boolean} */
+var mapReportSubmitting = false;
+
+/** Same default centre as pages/index.js MAP_CENTER / mapUserLocation.js */
+var MAP_REPORT_DEFAULT_LAT = 49.2827;
+var MAP_REPORT_DEFAULT_LNG = -123.1207;
+
+/**
+ * Build a synthetic position object when GPS is unavailable. Pins the
+ * report at Vancouver so the flow never hard-fails on permission alone.
+ * @param {string} reason
+ * @returns {{ lat:number, lng:number, accuracy:null, fetchedAt:number, isFallback:boolean, fallbackReason:string }}
+ */
+function mapReportFallbackPosition(reason) {
+    return {
+        lat: MAP_REPORT_DEFAULT_LAT,
+        lng: MAP_REPORT_DEFAULT_LNG,
+        accuracy: null,
+        fetchedAt: Date.now(),
+        isFallback: true,
+        fallbackReason: reason || "unknown",
+    };
+}
+
+/**
+ * Try GPS; on any failure return the Vancouver default instead of rejecting.
+ * @returns {Promise<{ lat:number, lng:number, accuracy:(number|null), fetchedAt:number, isFallback?:boolean, fallbackReason?:string }>}
+ */
+function mapReportResolvePosition() {
+    if (typeof getUserPosition !== "function") {
+        return Promise.resolve(mapReportFallbackPosition("unsupported"));
+    }
+    return getUserPosition({ force: false }).catch(function (err) {
+        var kind = err && err.kind ? err.kind : "unknown";
+        return mapReportFallbackPosition(kind);
+    });
+}
 
 /**
  * @returns {HTMLElement|null}
@@ -34,15 +83,43 @@ function mapReportGetModal() {
 }
 
 /**
+ * Update the inline status row. Pass an empty string to hide it.
+ * @param {string} text
+ * @param {'info'|'error'|'success'} [variant]
+ * @author Jiahao
+ */
+function mapReportSetStatus(text, variant) {
+    var status = document.getElementById("map-report-status");
+    if (!status) return;
+    status.textContent = text || "";
+    status.hidden = !text;
+    status.classList.remove(
+        "map-report-status--error",
+        "map-report-status--success",
+        "map-report-status--info"
+    );
+    if (text && variant) {
+        status.classList.add("map-report-status--" + variant);
+    }
+}
+
+/**
  * Clear inline status text in the report modal.
  * @author Jiahao
  */
 function mapReportClearStatus() {
-    var status = document.getElementById("map-report-status");
-    if (status) {
-        status.textContent = "";
-        status.hidden = true;
-    }
+    mapReportSetStatus("", null);
+}
+
+/**
+ * Update the location hint to reflect either pending GPS, an actual fix,
+ * or a friendly fallback. Called from the submit handler.
+ * @param {string} text
+ * @author Jiahao
+ */
+function mapReportSetLocationHint(text) {
+    var hint = document.getElementById("map-report-location-hint");
+    if (hint) hint.textContent = text || "";
 }
 
 /**
@@ -56,6 +133,26 @@ function mapReportSelectedTypeId() {
 }
 
 /**
+ * Toggle the submit button's busy state. Disables the input so the user
+ * can't double-tap submit while geolocation / POST is in flight.
+ * @param {boolean} busy
+ * @author Jiahao
+ */
+function mapReportSetSubmitBusy(busy) {
+    mapReportSubmitting = !!busy;
+    var btn = document.getElementById("map-report-submit");
+    if (!btn) return;
+    btn.disabled = !!busy;
+    btn.classList.toggle("is-busy", !!busy);
+    if (busy) {
+        btn.dataset.originalLabel = btn.dataset.originalLabel || btn.textContent;
+        btn.textContent = "Saving…";
+    } else if (btn.dataset.originalLabel) {
+        btn.textContent = btn.dataset.originalLabel;
+    }
+}
+
+/**
  * Open the report modal.
  * @author Jiahao
  */
@@ -65,6 +162,9 @@ function openMapReport() {
         return;
     }
     mapReportClearStatus();
+    mapReportSetLocationHint(
+        "We try your device location first. If access is blocked, your report is saved at Vancouver city centre — you can still submit."
+    );
     modal.show();
 }
 
@@ -94,36 +194,106 @@ function closeMapReportIfOpen() {
 }
 
 /**
- * Validate and submit the current report payload (console-only for now).
+ * Show a Bootstrap 5 success toast after a report is saved. Falls back to
+ * no-op if the markup or Bootstrap bundle is missing.
+ * @param {string} message
+ * @author Jiahao
+ */
+function mapReportShowSuccessToast(message) {
+    var el = document.getElementById("map-report-success-toast");
+    var body = document.getElementById("map-report-success-toast-body");
+    if (!el || typeof bootstrap === "undefined" || !bootstrap.Toast) {
+        return;
+    }
+    if (body) {
+        body.textContent = message || "Report submitted successfully.";
+    }
+    var toast = bootstrap.Toast.getOrCreateInstance(el, {
+        autohide: true,
+        delay: 4500,
+    });
+    toast.show();
+}
+
+/**
+ * Validate, geolocate, POST. Closes the modal on success and dispatches
+ * `maptoggle:report-created` so the map can render the new pin without
+ * waiting for the next list refresh.
  * @author Jiahao
  */
 function mapReportOnSubmit() {
+    if (mapReportSubmitting) return;
+
     mapReportClearStatus();
     var typeId = mapReportSelectedTypeId();
-    var status = document.getElementById("map-report-status");
     if (!typeId) {
-        if (status) {
-            status.hidden = false;
-            status.textContent = "Choose one option.";
-        }
+        mapReportSetStatus("Choose one option.", "error");
         return;
     }
-    var payload = {
-        reportType: typeId,
-        recordedAt: new Date().toISOString(),
-        location: {
-            source: "device_gps",
-            status: "pending",
-            lat: null,
-            lng: null,
-            accuracyM: null,
-        },
-    };
-    console.log("[mapReport] (demo — not persisted)", payload);
-    if (status) {
-        status.hidden = false;
-        status.textContent = "Thanks — logged in the console only for now.";
+    if (typeof createReport !== "function") {
+        mapReportSetStatus("Reporting is unavailable right now.", "error");
+        return;
     }
+
+    mapReportSetSubmitBusy(true);
+    mapReportSetStatus("Getting your location…", "info");
+
+    mapReportResolvePosition()
+        .then(function (pos) {
+            if (pos.isFallback) {
+                mapReportSetLocationHint(
+                    "Location unavailable — this report will be pinned at Vancouver city centre (" +
+                        pos.lat.toFixed(4) +
+                        ", " +
+                        pos.lng.toFixed(4) +
+                        "). Enable location for this site to pin where you are."
+                );
+            } else {
+                mapReportSetLocationHint(
+                    "Captured: " +
+                        pos.lat.toFixed(5) +
+                        ", " +
+                        pos.lng.toFixed(5) +
+                        (pos.accuracy ? " (±" + Math.round(pos.accuracy) + " m)" : "")
+                );
+            }
+            mapReportSetStatus("Saving your report…", "info");
+            return createReport({
+                reportType: typeId,
+                lat: pos.lat,
+                lng: pos.lng,
+                accuracyM: pos.accuracy,
+            }).then(function (report) {
+                return { report: report, pos: pos };
+            });
+        })
+        .then(function (result) {
+            var report = result && result.report;
+            var pos = result && result.pos;
+            window.dispatchEvent(
+                new CustomEvent("maptoggle:report-created", {
+                    detail: { report: report, position: pos },
+                })
+            );
+            var toastMsg =
+                pos && pos.isFallback
+                    ? "Report saved at city centre. Enable location next time for a precise pin."
+                    : "Report submitted successfully.";
+            closeMapReport();
+            requestAnimationFrame(function () {
+                mapReportShowSuccessToast(toastMsg);
+            });
+        })
+        .catch(function (err) {
+            console.warn("[mapReport] submit failed", err);
+            mapReportSetStatus(
+                (err && err.message) || "Couldn't save your report. Please try again.",
+                "error"
+            );
+        })
+        .then(function () {
+            mapReportSetSubmitBusy(false);
+        });
 }
 
 /**
@@ -148,6 +318,7 @@ function initMapReport() {
         modalEl.addEventListener("hidden.bs.modal", function () {
             mapReportOpen = false;
             mapReportClearStatus();
+            mapReportSetSubmitBusy(false);
         });
         modalEl.addEventListener("shown.bs.modal", function () {
             var fs = document.getElementById("map-report-type-fieldset");

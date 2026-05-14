@@ -2,7 +2,12 @@
  * @file index.js — Map page bootstrap.
  *
  * Boot order:
- *   1. Create the Leaflet map + OSM tiles.
+ *   1. Create the Leaflet map + OSM tiles. Initial view is Vancouver
+ *      centre so the page never starts blank, then we kick off a single
+ *      auto-locate that pans / drops the user dot if the browser hands
+ *      us a GPS fix. Permission denied / timeout / unsupported all fall
+ *      through silently — the user is already looking at the Vancouver
+ *      default and the Locate button stays available for retry.
  *   2. Build the heat layer. First paint uses the mock-synthesized series on
  *      MOCK_MAP_LOCATIONS so the layer appears instantly, then we kick off
  *      /api/weather-grid (single batched open-meteo call) and swap to live
@@ -11,9 +16,11 @@
  *      fetches /api/risk for that single location via mapSpotDetail.js +
  *      services/mapApi.js → ensureSpotApiData. Nothing else is pre-warmed.
  *   4. Wire the time rail, toggle bar, report, onboarding, and global escape.
+ *      Mount the Locate control (top-left, below zoom).
  *   5. Kick off the side fetches:
  *        - live weather grid (heat layer swap)
  *        - fountains
+ *        - crowd-sourced /api/reports → renderReportMarkers
  *
  * The 100 seeds in MOCK_MAP_LOCATIONS now ship without any weather data;
  * detail-panel numbers come 100% from the live backend, and the heat layer
@@ -246,6 +253,151 @@
             });
     }
 
+    /**
+     * Try to grab the user's GPS as soon as the map is on screen. On
+     * success we drop the blue "you are here" dot and pan the camera to
+     * the fix; on any failure (permission denied, timeout, unsupported)
+     * we stay at the Vancouver centre that we already painted and emit
+     * a status toast so the user understands why no dot showed up.
+     *
+     * The Permissions API is consulted first so we don't re-emit a
+     * "permission denied" error on every page load for users who have
+     * already declined — the browser remembers their answer and we
+     * shouldn't pester it (or the console). When that permission is
+     * "denied" we surface a toast pointing the user at the Locate
+     * button + browser site-settings, because just being silent leaves
+     * them wondering why nothing happened.
+     *
+     * The 60 s in-memory cache in mapUserLocation.js means a follow-up
+     * Locate-button click or Report-submit within a minute reuses this
+     * fix without re-prompting.
+     *
+     * @param {L.Map} map
+     * @author Jiahao
+     */
+    function autoLocateOnLoad(map) {
+        if (typeof getUserPosition !== "function") return;
+
+        if (!navigator.geolocation) {
+            if (typeof showLocationFallbackAtDefault === "function") {
+                showLocationFallbackAtDefault(map);
+            }
+            setMapStatusMessage("Geolocation not supported — showing default map centre.", 4500);
+            return;
+        }
+
+        var permissionCheck =
+            typeof getGeolocationPermissionState === "function"
+                ? getGeolocationPermissionState()
+                : Promise.resolve("unknown");
+
+        permissionCheck.then(function (state) {
+            console.info("[index] auto-locate permission state:", state);
+
+            if (state === "denied") {
+                if (typeof showLocationFallbackAtDefault === "function") {
+                    showLocationFallbackAtDefault(map);
+                }
+                setMapStatusMessage(
+                    "Location blocked — showing Vancouver. Allow location in site settings.",
+                    5200
+                );
+                return;
+            }
+
+            // 'prompt' / 'unknown' / 'granted' all proceed. Show a
+            // brief "Locating…" so the user knows something is in
+            // flight — the OS permission dialog can take a second or
+            // two to appear and a blank map is confusing.
+            setMapStatusMessage("Locating you…", 0);
+
+            getUserPosition({ force: true })
+                .then(function (pos) {
+                    if (typeof showUserLocation === "function") {
+                        showUserLocation(pos);
+                    }
+                    // setView (not flyTo) — the map literally just
+                    // appeared, so animating from the Vancouver default
+                    // would look like a glitch instead of a deliberate pan.
+                    map.setView([pos.lat, pos.lng], Math.max(map.getZoom(), 14));
+                    setMapStatusMessage("Centered on your location", 1800);
+                })
+                .catch(function (err) {
+                    if (err && err.kind === "denied") {
+                        if (typeof showLocationFallbackAtDefault === "function") {
+                            showLocationFallbackAtDefault(map);
+                        }
+                        setMapStatusMessage(
+                            "Location blocked — showing Vancouver. Allow location in site settings.",
+                            5200
+                        );
+                    } else {
+                        console.info(
+                            "[index] auto-locate failed:",
+                            err && err.message
+                        );
+                        setMapStatusMessage(
+                            (err && err.message) || "Couldn't locate you",
+                            3000
+                        );
+                    }
+                });
+        });
+    }
+
+    /**
+     * Pull all persisted reports from /api/reports and render them. Failure
+     * is swallowed (the backend already degrades gracefully when MongoDB is
+     * offline by returning an empty list) — there's nothing actionable for
+     * the user, the map still works.
+     * @param {L.Map} map
+     * @author Jiahao
+     */
+    function loadReports(map) {
+        if (typeof listReports !== "function" || typeof renderReportMarkers !== "function") {
+            return;
+        }
+        listReports({})
+            .then(function (reports) {
+                renderReportMarkers(map, reports);
+                if (reports && reports.length) {
+                    setMapStatusMessage(reports.length + " reports loaded", 2400);
+                }
+            })
+            .catch(function (err) {
+                console.warn("[index] report fetch failed", err);
+            });
+    }
+
+    /**
+     * Wire the Report-submit success event to two visible side effects:
+     *   1. Optimistically drop the new pin on the map without re-fetching.
+     *   2. Pan to the user's freshly-captured location so the new pin is
+     *      in view, and update the shared user-location dot.
+     * @param {L.Map} map
+     * @author Jiahao
+     */
+    function bindReportCreatedEvent(map) {
+        window.addEventListener("maptoggle:report-created", function (ev) {
+            var detail = ev.detail || {};
+            var report = detail.report;
+            var pos = detail.position;
+            if (report && typeof addOneReportMarker === "function") {
+                addOneReportMarker(report);
+            }
+            if (pos) {
+                if (pos.isFallback && typeof showLocationFallbackAtDefault === "function") {
+                    showLocationFallbackAtDefault(map);
+                } else if (typeof showUserLocation === "function") {
+                    showUserLocation(pos);
+                }
+                if (typeof map.flyTo === "function") {
+                    map.flyTo([pos.lat, pos.lng], Math.max(map.getZoom(), 15), { duration: 0.6 });
+                }
+            }
+        });
+    }
+
     /** Cache of the latest toggle prefs as advertised by the toggle bar.
      *  Re-read from the bar's events so we never have to re-query the DOM. */
     var lastTogglePrefs = { buildingsMode: "local", fountainsOn: true, heatOn: true };
@@ -315,6 +467,12 @@
     if (typeof renderSeedSpotPins === "function") {
         renderSeedSpotPins(map, MOCK_MAP_LOCATIONS);
     }
+    if (typeof addUserLocationLayer === "function") {
+        addUserLocationLayer(map);
+    }
+    if (typeof addLocateControl === "function") {
+        addLocateControl(map, { onStatus: setMapStatusMessage });
+    }
     initMapTimeRail(invalidate);
     bindDetailSyncOnTimeChange();
     bindHeatRefreshToSlider(heat);
@@ -325,7 +483,10 @@
     initOptionalUiModules();
     bindGlobalEscapeHandlers();
     bindToggleBar(map, heat);
+    bindReportCreatedEvent(map);
 
+    autoLocateOnLoad(map);
     loadLiveHeatGrid(heat);
     loadFountains(map);
+    loadReports(map);
 })();

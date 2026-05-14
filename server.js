@@ -45,6 +45,10 @@ app.use(express.urlencoded({ extended: true }));
 const healthRouter = require('./routes/health');
 app.use('/api/health', healthRouter);
 
+// User-submitted "what does it feel like here" reports (Mongo-backed).
+const reportsRouter = require('./routes/reports');
+app.use('/api/reports', reportsRouter);
+
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, '/public')));
 
