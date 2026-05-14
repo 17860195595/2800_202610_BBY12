@@ -11,9 +11,9 @@ body.has-app-footer {
  * children too — giving them flex:1 breaks fixed descendants (tutorial card clipped / invisible).
  */
 body.has-app-footer
-  > :not(#app-header):not(#app-footer):not(#map-onboarding-modal):not(#map-report-modal):not(
-    #map-report-fab
-  ) {
+  > :not(#app-header):not(#app-footer):not(#map-onboarding-modal):not(
+    #map-report-modal
+  ):not(#map-report-fab) {
   flex: 1 1 auto;
 }
 
@@ -71,7 +71,8 @@ body.has-bottom-dock .app-foot-nav {
   /* Above map / time rail so tabs stay tappable */
   z-index: 1100;
   box-sizing: border-box;
-  padding: var(--space-2) var(--space-2-5) calc(var(--space-2) + env(safe-area-inset-bottom, 0rem));
+  padding: var(--space-2) var(--space-2-5)
+    calc(var(--space-2) + env(safe-area-inset-bottom, 0rem));
   background-color: rgb(121, 163, 105);
   border-top: var(--space-px-1) solid rgba(0, 0, 0, 0.12);
   box-shadow: 0 calc(-1 * var(--space-1)) var(--space-3) rgba(0, 0, 0, 0.06);
@@ -93,7 +94,7 @@ body.has-bottom-dock .app-foot-nav {
 
 .app-foot-nav__tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--space-1);
   align-items: stretch;
 }

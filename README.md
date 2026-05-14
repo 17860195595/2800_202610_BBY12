@@ -45,3 +45,10 @@ TBA
 
   - Settings page appearance preferences was assisted by ChatGPT and modified/integrated by Edward Liang.  
   ChatGPT: https://chat.openai.com/
+
+  - ai-chat.js and mapSummary.js logic, ai-chat.html layout, and ai-chat.css style. fully AI generated for sprint 3 popup challenge
+  Copilot in vscode
+
+  - AI chat logic in server.js moved the main risk data gathering logic into seperate function to allow the AI page to get the data, and implemented the
+  AI calls to https://app.clod.io/.
+  Copilot in vscode
