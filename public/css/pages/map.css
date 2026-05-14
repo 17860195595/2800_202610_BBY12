@@ -389,6 +389,46 @@ body.has-app-footer.has-map-time-rail.has-bottom-dock {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
+.map-spot-detail-panel__ai-chat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+  padding: 0.5625rem var(--space-4);
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(52, 122, 78, 0.98) 0%, var(--primary-green-dark) 100%);
+  border: 1px solid rgba(13, 74, 45, 0.35);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 2px 8px rgba(13, 74, 45, 0.18);
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.map-spot-detail-panel__ai-chat:hover:not(:disabled) {
+  filter: brightness(1.04);
+}
+
+.map-spot-detail-panel__ai-chat:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.map-spot-detail-panel__ai-chat:focus-visible {
+  outline: 2px solid var(--primary-green-dark);
+  outline-offset: 2px;
+}
+
+.map-spot-detail-panel__ai-chat:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .map-spot-detail-panel__stats {
   margin: 0 0 var(--space-4);
   padding: var(--space-1) 0;

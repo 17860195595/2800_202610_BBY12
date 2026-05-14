@@ -68,6 +68,7 @@ function mapRiskTierFromScore(score) {
  * @property {HTMLElement|null} chartEl
  * @property {HTMLElement|null} stateEl
  * @property {HTMLButtonElement|null} retryBtn
+ * @property {HTMLButtonElement|null} aiChatBtn
  * @property {HTMLButtonElement|null} closeBtn
  * @property {Object|null} currentSpot
  */
@@ -84,6 +85,7 @@ var mapSpotDetailUi = {
     chartEl: null,
     stateEl: null,
     retryBtn: null,
+    aiChatBtn: null,
     closeBtn: null,
     currentSpot: null,
 };
@@ -150,6 +152,29 @@ function ensureMapSpotDetailUi() {
     var summary = document.createElement("p");
     summary.className = "map-spot-detail-panel__summary";
 
+    var aiChatBtn = document.createElement("button");
+    aiChatBtn.type = "button";
+    aiChatBtn.className = "map-spot-detail-panel__ai-chat";
+    aiChatBtn.textContent = "Ask AI about this place";
+    aiChatBtn.addEventListener("click", function () {
+        var sel = mapSpotDetailUi.currentSpot;
+        if (
+            !sel ||
+            typeof sel.lat !== "number" ||
+            typeof sel.lng !== "number" ||
+            isNaN(sel.lat) ||
+            isNaN(sel.lng)
+        ) {
+            return;
+        }
+        var url = new URL(window.location.origin + "/ai-chat");
+        url.searchParams.set("lat", String(sel.lat));
+        url.searchParams.set("lng", String(sel.lng));
+        url.searchParams.set("name", sel.name || "");
+        url.searchParams.set("initialAction", "summary");
+        window.location.href = url.toString();
+    });
+
     // The state element doubles as both loading and error display. Hidden
     // entirely once live data lands so it does not leave a dead row in the
     // panel. role="status" + aria-live keeps screen readers in the loop.
@@ -202,6 +227,7 @@ function ensureMapSpotDetailUi() {
     note.textContent = "Live readings from /api/risk for this exact location.";
 
     body.appendChild(summary);
+    body.appendChild(aiChatBtn);
     body.appendChild(state);
     body.appendChild(retryBtn);
     body.appendChild(stats);
@@ -224,6 +250,7 @@ function ensureMapSpotDetailUi() {
     mapSpotDetailUi.chartEl = chart;
     mapSpotDetailUi.stateEl = state;
     mapSpotDetailUi.retryBtn = retryBtn;
+    mapSpotDetailUi.aiChatBtn = aiChatBtn;
     mapSpotDetailUi.closeBtn = closeBtn;
 }
 
@@ -551,6 +578,15 @@ function syncMapSpotDetailPanel() {
 
     mapSpotDetailUi.timeLabelEl.textContent = "Selected time: " + label;
     mapSpotDetailUi.summaryEl.textContent = spot.summary || "";
+
+    if (mapSpotDetailUi.aiChatBtn) {
+        var coordsOk =
+            typeof spot.lat === "number" &&
+            typeof spot.lng === "number" &&
+            !isNaN(spot.lat) &&
+            !isNaN(spot.lng);
+        mapSpotDetailUi.aiChatBtn.disabled = !coordsOk;
+    }
 
     renderDetailStats(mapSpotDetailUi.statsEl, snap);
     renderTemperatureBars(mapSpotDetailUi.chartEl, hourly, hour);
