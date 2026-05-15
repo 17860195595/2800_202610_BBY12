@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alerts — ShadeSafe</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,12 +19,14 @@
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/style.css" />
   </head>
+
   <body class="has-app-footer">
     <div id="app-header"></div>
 
@@ -32,12 +35,14 @@
         <section class="alerts-shell">
           <div
             id="alerts-first-time-hint"
-            class="alert alert-info alert-dismissible fade show"
+            class="alert alert-success alert-dismissible fade show alerts-hint"
             role="alert"
           >
-            <strong>First time here?</strong>
-            This page shows heat risk updates, safety tips, and the latest high
-            alert for your selected area.
+            <strong>Welcome to Alerts</strong>
+            <p>
+              This page shows your current heat stress risk, local weather data,
+              and the latest high alert for your area.
+            </p>
 
             <button
               type="button"
@@ -46,9 +51,10 @@
               aria-label="Close"
             ></button>
           </div>
+
           <header class="alerts-header">
             <h1 class="page-title">Alerts</h1>
-            <p>Heat and UV alerts for your saved spots will show here.</p>
+            <p>Check the current heat and UV risk for your area.</p>
           </header>
 
           <div
@@ -56,7 +62,8 @@
             class="alert alert-warning alert-dismissible fade show"
             role="alert"
           >
-            Green means safe, yellow means hot, red means dangerous.
+            Green indicates low risk, yellow indicates moderate risk, and red
+            indicates high heat stress risk.
 
             <button
               type="button"
@@ -70,27 +77,68 @@
             <div class="arc-top">
               <div>
                 <p class="arc-label">Current Heat Stress Risk</p>
-                <h2 class="arc-title">
-                  HIGH
-                  <span
-                    class="alerts-icon alerts-icon-warning"
-                    aria-hidden="true"
-                  >
-                    <i data-lucide="triangle-alert"></i>
-                  </span>
-                </h2>
+
+                <h2 id="risk-level" class="arc-title">Loading...</h2>
               </div>
 
-              <span class="arc-pill arc-pill--high">High</span>
+              <span id="risk-pill" class="arc-pill">Loading</span>
             </div>
 
-            <p class="arc-desc">
-              High heat stress risk near Robson Square. Take precautions, reduce
-              sun exposure, and stay hydrated.
-            </p>
+            <div id="risk-desc" class="arc-desc">
+              <p class="risk-desc-summary">Loading heat stress risk data...</p>
+
+              <div class="risk-metrics-grid">
+                <div class="risk-metric">
+                  <i class="bi bi-graph-up-arrow"></i>
+                  <div>
+                    <span>Risk score</span>
+                    <strong>--%</strong>
+                  </div>
+                </div>
+
+                <div class="risk-metric">
+                  <i class="bi bi-thermometer-half"></i>
+                  <div>
+                    <span>Temperature</span>
+                    <strong>--°C</strong>
+                  </div>
+                </div>
+
+                <div class="risk-metric">
+                  <i class="bi bi-sun"></i>
+                  <div>
+                    <span>UV index</span>
+                    <strong>--</strong>
+                  </div>
+                </div>
+
+                <div class="risk-metric">
+                  <i class="bi bi-droplet"></i>
+                  <div>
+                    <span>Humidity</span>
+                    <strong>--%</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div class="arc-meter">
-              <!-- do that later -->
+              <div class="risk-chart-panel">
+                <div class="risk-meter-box">
+                  <div id="chart"></div>
+
+                  <div class="risk-meter-center">
+                    <strong id="risk-chart-value">--%</strong>
+                  </div>
+
+                  <div class="risk-meter-labels">
+                    <span>LOW</span>
+                    <span>MODERATE</span>
+                    <span>HIGH</span>
+                  </div>
+                </div>
+              </div>
+              <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
             </div>
 
             <div class="arc-grid">
@@ -99,7 +147,7 @@
                   <i data-lucide="map-pin"></i>
                 </span>
                 <strong>Location</strong>
-                <p>Robson Square</p>
+                <p id="alert-location">Vancouver</p>
               </article>
 
               <article class="arc-grid-item">
@@ -107,7 +155,7 @@
                   <i data-lucide="clock"></i>
                 </span>
                 <strong>Last updated</strong>
-                <p>10:42 AM</p>
+                <p id="alert-last-updated">--</p>
               </article>
 
               <article class="arc-grid-item">
@@ -115,7 +163,7 @@
                   <i data-lucide="refresh-cw"></i>
                 </span>
                 <strong>Checking every</strong>
-                <p>30 seconds</p>
+                <p id="alert-check-interval">1 minute</p>
               </article>
             </div>
           </section>
@@ -134,7 +182,7 @@
               </span>
               <div>
                 <strong>Stay in shaded areas</strong>
-                <p>
+                <p id="tip-shaded-areas">
                   Use tree shade, awnings, or indoor cooling spaces when
                   possible.
                 </p>
@@ -147,7 +195,9 @@
               </span>
               <div>
                 <strong>Stay hydrated</strong>
-                <p>Drink water regularly, even before you feel thirsty.</p>
+                <p id="tip-hydrated">
+                  Drink water regularly, even before you feel thirsty.
+                </p>
               </div>
             </article>
 
@@ -157,7 +207,9 @@
               </span>
               <div>
                 <strong>Avoid peak sun hours</strong>
-                <p>Try to avoid outdoor activities between 12 PM and 4 PM.</p>
+                <p id="tip-peak-sun">
+                  Try to avoid outdoor activities between 12 PM and 4 PM.
+                </p>
               </div>
             </article>
           </section>
@@ -171,13 +223,13 @@
                 Last High Alert
               </h2>
 
-              <p class="last-time">Today, 1:42 PM</p>
-              <p class="last-desc">
-                Heat stress risk was HIGH in your selected area.
+              <p id="last-time" class="last-time">No high alert today</p>
+              <p id="last-desc" class="last-desc">
+                No HIGH heat stress risk has been detected in your current area.
               </p>
             </div>
 
-            <span class="last-pill last-pill--high">HIGH</span>
+            <span id="last-pill" class="last-pill last-pill--none">NONE</span>
           </section>
 
           <aside class="alerts-note">
@@ -190,6 +242,7 @@
               banner on the Map tab.
             </p>
           </aside>
+
           <div
             id="alerts-refresh-hint"
             class="alert alert-success alert-dismissible fade show"
@@ -215,15 +268,19 @@
         </section>
       </section>
     </main>
+
     <div id="app-footer"></div>
 
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
+
     <script>
       loadAppHeader({ showBack: false });
       loadAppFooter();
     </script>
+
     <script src="js/pages/alert.js"></script>
+
     <script>
       lucide.createIcons();
     </script>
