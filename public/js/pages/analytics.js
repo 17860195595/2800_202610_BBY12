@@ -24,28 +24,35 @@ async function loadAnalytics()
         //to clear old ones
         analyticsContainer.innerHTML = "";
 
-        //loops through each day object
-        data[2][0].forEach((day) => 
+        //get rid of [0], [1] as they are coordinates. Flat makes list of list into one big list.
+        const allDays = data.slice(2).flat();
+
+        //Time Stamp = the 1/8th time in a day if there is 6 days then there is 6x8 entries
+        allDays.forEach((entry) => 
         {
             const card = document.createElement("div");
+            card.classList.add("analytics-example-item");
 
-            card.classList.add("analytics-example-item")
-
+            //format date so its human redable
+            const formattedTime = new Date(entry.time).toLocaleString('en-US', 
+                    {
+                        month: 'short',
+                        day: 'numeric',
+                        hour : 'numeric',
+                        minute: '2-digit'
+                    });
+            
+                    //toFixed for only 2 decimal points
             card.innerHTML = `
-                <h3>
-                    ${day.time}
-                </h3>
-
-                <p>
-                    UV Index: ${day.uv}
+                <h3>${formattedTime}</h3>
+                <p> 
+                    UV Index: ${Number(entry.uv_index).toFixed(2)}
                 </p>
-
                 <p>
-                    Temperature: ${day.temperature}
+                    Temperature: ${Number(entry.temperature_C).toFixed(2)}°C
                 </p>
-
                 <p>
-                    Risk Score: ${day.risk}
+                    Risk Score: ${Number(entry.risk).toFixed(2)}
                 </p>
             `;
 

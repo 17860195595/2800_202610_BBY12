@@ -10,6 +10,7 @@ require("dotenv").config();
 //Encrypting and hashing stuff
 const bcrypt = require("bcrypt");
 const saltRounds = 12;
+const Joi = require('joi');
 
 /**
  * Added by @Markus
@@ -51,8 +52,89 @@ app.use("/api/health", healthRouter);
 const reportsRouter = require('./routes/reports');
 app.use('/api/reports', reportsRouter);
 
+
+/**
+ * This is the session middleware.
+ * 
+ * @author Adam
+ */
+app.use(session(
+{
+    secret: SESSION_SECRET,
+    store: MongoStore.create({mongoUrl : MONGODB_URL}),
+    saveUninitialized : false,
+    resave : true,
+    cookie:
+    {
+      maxAge: 1000 * 60 * 60 * 1          //delets cookie (wristband) after 1 hour  
+    }
+}));
+
+//Middle ware to check if user is logged in
+function isAuthenticated(req, res, next)
+{
+  //if logged in
+  if(req.session && req.session.user)
+  {
+    next();
+  }
+  //not logged in
+  else
+  {
+    return res.redirect('/login.html');
+  }
+}
+
+
+/**
+ * Added by @Adam
+ * 
+ * This protects from just typing "page.html" in browser.
+ */
+app.use((req, res, next) =>
+{
+  // allow APIs to pass through
+  if (req.path.startsWith('/api'))
+  {
+    return next();
+  }
+
+  // allow login + signup pages always
+  const publicPages = ['/login.html', '/signup.html'];
+
+  if (publicPages.includes(req.path))
+  {
+    return next();
+  }
+
+  // block ALL other html files unless logged in
+  if (req.path.endsWith('.html'))
+  {
+    if (req.session && req.session.user)
+    {
+      return next();
+    }
+
+    return res.redirect('/login.html');
+  }
+
+  if (req.path === '/index.html')
+{
+  if (req.session && req.session.user)
+  {
+    return next();
+  }
+
+  return res.redirect('/login.html');
+}
+
+  next();
+});
+
+
 // Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, "/public")));
+app.use(express.static(path.join(__dirname, '/public')));
+
 
 /**
  * Setup user schema
@@ -63,8 +145,11 @@ app.use(express.static(path.join(__dirname, "/public")));
 const userSchema = new mongoose.Schema({
   username: String,
   password: String,
+  userFirstLog: { type: Number, default: 0 } 
+
 });
 const User = mongoose.model("User", userSchema);
+
 
 /**
  * This is the session middleware.
@@ -83,15 +168,36 @@ app.use(
   }),
 );
 
+
+/**
+ * added by @Adam
+ * 
+ * Joi validation schemas
+ */
+const signupSchema = Joi.object(
+{
+  username: Joi.string().min(3).max(20).required(),
+  password: Joi.string().min(6).max(20).required()
+});
+
+const loginSchema = Joi.object(
+{
+  username: Joi.string().required(),
+  password: Joi.string().required()
+});
+
+
 /**
  * Added by @Adam
  *
  * Hey guys i did this just so the server can
  * start so that way it has a default route.
  */
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/index.html"));
+app.get('/', isAuthenticated, (req, res) => 
+{
+  res.redirect('/index.html')
 });
+
 
 /**
  * Added by @Adam
@@ -104,13 +210,37 @@ app.get("/login", (req, res) => {
 });
 
 /**
+ * Added by @Adam
+ * 
+ * I did this just so i can test and see 
+ * the signup page i am working on.
+ */
+app.get("/signup", (req, res) => 
+{
+  res.sendFile(path.join(__dirname, '/public/signup.html'));
+});
+
+
+/**
  * the post function handler for signup.
  * It takes in req object from client side js.
  *
  * @author Adam.s
  */
-app.post("/login", async (req, res) => {
-  console.log(req.body); //for testing
+app.post('/login', async (req, res) => 
+{
+  //takes only error property in the object
+  const {error} = loginSchema.validate(req.body);
+
+  if(error)
+  {
+    //first error, and 400 = bad request
+    return res.status(400).json(
+    {
+      message: error.details[0].message
+    })
+  }
+
   const username = req.body.username;
   const password = req.body.password;
 
@@ -137,9 +267,14 @@ app.post("/login", async (req, res) => {
     username: user.username,
   };
 
-  //send res to client
-  res.json({
-    message: "Login sucessfull",
+  //make it know user has logged in more than once
+  user.userFirstLog = 1;
+  await user.save();
+
+  //send res to client 
+  res.json(
+  {
+    message: 'Login sucessfull'
   });
 });
 
@@ -149,7 +284,8 @@ app.post("/login", async (req, res) => {
  * I did this just so i can test and see
  * the signup page i am working on.
  */
-app.get("/signup", (req, res) => {
+app.get("/signup", (req, res) => 
+{
   res.sendFile(path.join(__dirname, "/public/signup.html"));
 });
 
@@ -159,14 +295,28 @@ app.get("/signup", (req, res) => {
  *
  * @author Adam.S
  */
-app.post("/signup", async (req, res) => {
-  console.log(req.body); //for testing
+app.post('/signup', async (req, res) => 
+{
+  //takes only error property in the object
+  const {error} = signupSchema.validate(req.body);
+
+  if(error)
+  {
+    //first error, and 400 = bad request
+    return res.status(400).json(
+    {
+      message: error.details[0].message
+    })
+  }
+
   const username = req.body.username;
   const password = req.body.password;
+  const userFirstLog = 0;
 
   const existingUser = await User.findOne({ username });
 
-  if (existingUser) {
+  if (existingUser) 
+  {
     //400 = client sent somthing wrong
     return res.status(400).json({
       message: "User already exisits",
@@ -176,16 +326,26 @@ app.post("/signup", async (req, res) => {
   const hashedPassy = await bcrypt.hash(password, saltRounds);
 
   //makes new User object
-  const newUser = new User({
+  const newUser = new User(
+  {
     username,
     password: hashedPassy,
+    //0 = only signed up 1 = logged in atleast once
+    userFirstLog: 0
   });
 
   //save sends to mongo dv
   await newUser.save();
 
+  //get username from DB and make session user = to that
+  req.session.user = 
+  {
+    username: newUser.username
+  };
+    
   //res.json sends back json object back to client response
-  res.json({
+  res.json(
+  {
     message: "Signup sucessfull",
   });
 });
@@ -200,11 +360,39 @@ app.get("/analytics", (req, res) => {
   res.sendFile(path.join(__dirname, "/public/analytics.html"));
 });
 
+
 app.get("/ai-chat", (req, res) => {
   res.sendFile(path.join(__dirname, "/public/ai-chat.html"));
 });
+app.get("/analytics", isAuthenticated, (req, res) => 
+{
+  res.sendFile(path.join(__dirname, '/public/analytics.html'));
+});
 
-app.get("/alert", (req, res) => {
+/**
+ * Added by @Edward
+ *
+ * Adds routes for the Me, Profile, Settings, and About pages.
+ * These pages support the user profile/settings flow from the Me page.
+ */
+
+app.get("/about", isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/about.html"));
+});
+app.get("/me", isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/me.html"));
+});
+
+app.get("/settings", isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/settings.html"));
+});
+
+app.get("/profile", isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/profile.html"));
+});
+
+app.get("/alert", isAuthenticated, (req, res) => 
+{
   res.sendFile(path.join(__dirname, "/public/alert.html"));
 });
 
@@ -278,7 +466,7 @@ async function buildRiskResults(lat, lng, past_days = 0) {
   return results;
 }
 
-app.get("/api/risk", async (req, res) => {
+app.get("/api/risk", isAuthenticated, async (req, res) => {
   try {
     const lat = parseLatLng(req.query.lat);
     const lng = parseLatLng(req.query.lng);
@@ -460,7 +648,7 @@ app.post("/api/ai-chat", async (req, res) => {
  * fetches all water fountain locations in the city of vancouver, there are around 250 water fountains total
  * we can probably just save this data in the database but for now we will just have this fetch
  */
-app.get("/api/fountains", async (req, res) => {
+app.get("/api/fountains", isAuthenticated, async (req, res) => {
   try {
     const fountains = await fetchWaterFountainData();
     res.json(fountains);
@@ -470,53 +658,63 @@ app.get("/api/fountains", async (req, res) => {
   }
 });
 
+
 /**
- * Added by @Edward
- *
- * Adds routes for the Me, Profile, Settings, and About pages.
- * These pages support the user profile/settings flow from the Me page.
+ * Added by @Adam
+ * 
+ * Logout route. Destroys sessiona and clears cookie and redirects back to login page.
  */
+app.get('/logout', (req, res) => 
+{
+  req.session.destroy();
 
-app.get("/about", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/about.html"));
-});
-app.get("/me", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/me.html"));
+  //Deletes the cookie that express session makes from browser.
+  res.clearCookie('connect.sid');
+  res.redirect('/login.html')
 });
 
-app.get("/settings", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/settings.html"));
+/**
+ * Added by @Adam
+ * 
+ * Page not found route.
+ */
+app.use( (req, res) =>
+{
+    res.status(404);
+    res.send("404 Page not found :(");
 });
 
 app.get("/profile", (req, res) => {
   res.sendFile(path.join(__dirname, "/public/profile.html"));
 });
 
-(async function start() {
-  const url =
-    process.env.MONGODB_URL || "mongodb://localhost:27017/project_template";
-  const skipMongo =
-    String(process.env.SKIP_MONGODB || "").toLowerCase() === "1" ||
-    process.env.SKIP_MONGODB === "true";
 
-  if (skipMongo) {
-    console.warn("SKIP_MONGODB set — server starting without database.");
-  } else {
-    try {
+(async function start() 
+{
+  const url = process.env.MONGODB_URL || 'mongodb://localhost:27017/project_template';
+  const skipMongo = String(process.env.SKIP_MONGODB || '').toLowerCase() === '1' || process.env.SKIP_MONGODB === 'true';
+
+  if (skipMongo) 
+  {
+    console.warn('SKIP_MONGODB set — server starting without database.');
+  }
+  else 
+  {
+    try 
+    {
       await mongoose.connect(url);
-      console.log("MongoDB connected");
-    } catch (err) {
-      console.warn("MongoDB unavailable:", err.message);
-      console.warn(
-        "Server will still run (static files / routes that do not need DB).",
-      );
-      console.warn(
-        "Fix MONGODB_URL or start MongoDB, then restart to connect.",
-      );
+      console.log('MongoDB connected');
+    }
+    catch (err) 
+    {
+      console.warn('MongoDB unavailable:', err.message);
+      console.warn('Server will still run (static files / routes that do not need DB).');
+      console.warn('Fix MONGODB_URL or start MongoDB, then restart to connect.');
     }
   }
 
-  app.listen(PORT, () => {
+  app.listen(PORT, () => 
+  {
     console.log(`Server listening on http://localhost:${PORT}`);
   });
 })();
