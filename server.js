@@ -37,12 +37,26 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 
 // Middleware
 app.use(cors());
+
+/*
+ * Added by @Edward
+ *
+ * Gives the Profile page enough JSON body space to save a resized avatar
+ * data URL together with the user's profile information.
+ */
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 //setup routes
 const healthRouter = require('./routes/health');
 app.use('/api/health', healthRouter);
+
+/*
+ * Added by @Edward
+ *
+ * Loads the user-center API used by the Me and Profile pages for profile
+ * fields, settings, and saved profile photos.
+ */
 const userCenterRouter = require('./routes/userCenter');
 
 // Serve static files from the 'public' directory
@@ -80,7 +94,12 @@ app.use(session(
     }
   }));
 
-// User-center APIs depend on the current login session, so mount them after session middleware.
+/*
+ * Added by @Edward
+ *
+ * Mounts user-center routes after session middleware so avatar/profile saves
+ * always use the currently logged-in user's session.
+ */
 app.use('/api/me', userCenterRouter);
 
 

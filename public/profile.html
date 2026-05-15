@@ -37,6 +37,12 @@
       </p>
 
       <section class="profile-card">
+        <!--
+          Added by @Edward
+
+          Shows the saved profile photo at the top of the Profile page.
+          JavaScript replaces the default SS text with the database avatar image.
+        -->
         <div class="profile-avatar-large" id="profileCardAvatar">SS</div>
 
         <div>
@@ -79,6 +85,13 @@
         <label class="form-field">
           <span>Profile Photo</span>
 
+          <!--
+            Added by @Edward
+
+            Lets the user choose a local image file for their profile photo.
+            The selected image is previewed here first, then saved when the
+            Save Profile button sends the profile form to the backend.
+          -->
           <div class="avatar-upload-box">
             <div class="avatar-preview" id="avatarPreview">SS</div>
 
@@ -101,6 +114,12 @@
         <button type="button" class="primary-btn" id="saveProfileBtn">
           Save Profile
         </button>
+        <!--
+          Added by @Edward
+
+          Gives upload and save feedback, including image processing errors,
+          login-required messages, and successful profile saves.
+        -->
         <p class="profile-save-status" id="profileSaveStatus" role="status" aria-live="polite"></p>
       </section>
     </main>

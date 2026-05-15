@@ -2,13 +2,28 @@
  * Added by @Edward
  *
  * Connects the Profile page to the user-center backend API.
+ * Handles profile photo upload by resizing the selected image in the browser,
+ * previewing it on the page, and saving the image data to MongoDB through
+ * PATCH /api/me/profile.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
+  /*
+   * Added by @Edward
+   *
+   * Limits and normalizes uploaded profile photos before saving them.
+   * The app stores a compact 256px JPEG data URL instead of the full file.
+   */
   const MAX_AVATAR_FILE_BYTES = 5 * 1024 * 1024;
   const AVATAR_CANVAS_SIZE = 256;
   const AVATAR_JPEG_QUALITY = 0.86;
 
+  /*
+   * Added by @Edward
+   *
+   * Collects Profile page form controls and avatar preview targets.
+   * These ids connect profile.html to the save and preview logic below.
+   */
   const displayNameInput = document.getElementById("profileDisplayNameInput");
   const roleInput = document.getElementById("profileRoleInput");
   const emailInput = document.getElementById("profileEmailInput");
@@ -21,6 +36,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const profileCardName = document.getElementById("profileCardName");
   const profileCardMeta = document.querySelector(".profile-card p");
 
+  /*
+   * Added by @Edward
+   *
+   * Tracks the currently saved avatar and a newly selected avatar.
+   * The pending avatar is only written to the database when Save Profile runs.
+   */
   let currentAvatarUrl = "";
   let pendingAvatarDataUrl = "";
   let isPreparingAvatar = false;
@@ -68,6 +89,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return data;
   }
 
+  /*
+   * Added by @Edward
+   *
+   * Renders either the saved profile photo or the SS fallback in one avatar box.
+   * The error handler protects the layout if an image URL cannot load.
+   */
   function renderAvatarIn(container, avatarUrl, altText) {
     if (!container) return;
 
@@ -88,11 +115,21 @@ document.addEventListener("DOMContentLoaded", () => {
     container.appendChild(img);
   }
 
+  /*
+   * Added by @Edward
+   *
+   * Keeps the small upload preview and the top profile-card avatar in sync.
+   */
   function renderAvatar(avatarUrl) {
     renderAvatarIn(avatarPreview, avatarUrl, "Profile photo preview");
     renderAvatarIn(profileCardAvatar, avatarUrl, "Profile photo");
   }
 
+  /*
+   * Added by @Edward
+   *
+   * Loads backend profile data into the Profile form and avatar previews.
+   */
   function applyProfileData(userData) {
     const profile = userData.profile || {};
     const displayName = profile.displayName || userData.username || "Guest User";
@@ -112,6 +149,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderAvatar(currentAvatarUrl);
   }
 
+  /*
+   * Added by @Edward
+   *
+   * Reads the selected upload file as a data URL so it can be drawn to canvas.
+   */
   function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -128,6 +170,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  /*
+   * Added by @Edward
+   *
+   * Loads the data URL into an Image object before resizing it.
+   */
   function loadImage(dataUrl) {
     return new Promise((resolve, reject) => {
       const image = new Image();
@@ -138,6 +185,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  /*
+   * Added by @Edward
+   *
+   * Validates, center-crops, and compresses the selected profile photo.
+   * The returned data URL is small enough to send through JSON and store in MongoDB.
+   */
   async function createAvatarDataUrl(file) {
     if (!file.type || !file.type.startsWith("image/")) {
       throw new Error("Choose an image file for your profile photo.");
@@ -183,6 +236,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return canvas.toDataURL("image/jpeg", AVATAR_JPEG_QUALITY);
   }
 
+  /*
+   * Added by @Edward
+   *
+   * Requests the logged-in user's saved profile and fills the Profile page.
+   */
   async function loadProfile() {
     try {
       const userData = await requestJson("/api/me");
@@ -198,6 +256,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  /*
+   * Added by @Edward
+   *
+   * Saves editable profile fields and the pending avatar data URL to the backend.
+   */
   async function saveProfile() {
     if (!saveButton) return;
 
@@ -237,6 +300,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (avatarInput) {
+    /*
+     * Added by @Edward
+     *
+     * Prepares a newly selected avatar immediately, but waits until Save Profile
+     * before sending it to MongoDB.
+     */
     avatarInput.addEventListener("change", async () => {
       const file = avatarInput.files && avatarInput.files[0];
 

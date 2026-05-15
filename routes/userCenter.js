@@ -10,6 +10,14 @@ const VALID_ACCENT_COLORS = ['green', 'blue', 'orange'];
 const VALID_HEAT_SENSITIVITY = ['low', 'normal', 'high'];
 const VALID_LANGUAGES = ['en'];
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/*
+ * Added by @Edward
+ *
+ * Defines what avatar values the Profile page is allowed to save.
+ * The frontend sends compact image data URLs, while safe remote/local image
+ * URLs are also allowed for future reuse.
+ */
 const MAX_AVATAR_DATA_URL_LENGTH = 750000;
 const AVATAR_DATA_URL_PATTERN = /^data:image\/(?:png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/;
 const REMOTE_AVATAR_URL_PATTERN = /^(?:https?:\/\/|\/images\/)[^\s"'<>]+$/i;
@@ -45,6 +53,12 @@ function getDefaultEmail(username) {
   return EMAIL_PATTERN.test(username) ? username.toLowerCase() : '';
 }
 
+/*
+ * Added by @Edward
+ *
+ * Validates uploaded avatar values before they are saved to MongoDB.
+ * This prevents arbitrary text or unsafe URLs from being stored as avatarUrl.
+ */
 function isValidAvatarUrl(avatarUrl) {
   if (avatarUrl.length === 0) {
     return true;
@@ -68,6 +82,12 @@ function defaultUserCenter(username) {
       displayName: username,
       role: 'ShadeSafe User',
       bio: '',
+      /*
+       * Added by @Edward
+       *
+       * Starts each account without a saved avatar. The Profile page fills this
+       * after the user chooses and saves a profile photo.
+       */
       avatarUrl: '',
     },
     preferences: {
@@ -174,6 +194,13 @@ function validateProfileBody(body) {
   const role = readOptionalString(body, 'role', 40, errors);
   const email = readOptionalString(body, 'email', 120, errors);
   const bio = readOptionalString(body, 'bio', 300, errors);
+
+  /*
+   * Added by @Edward
+   *
+   * Reads the optional avatar image sent by the Profile page. The larger max
+   * length is needed because the avatar is saved as a compact data URL string.
+   */
   const avatarUrl = readOptionalString(body, 'avatarUrl', MAX_AVATAR_DATA_URL_LENGTH, errors);
 
   if (displayName !== undefined) {
@@ -303,6 +330,12 @@ router.patch('/profile', async (req, res) => {
 
     userCenter.profile = userCenter.profile || {};
 
+    /*
+     * Added by @Edward
+     *
+     * Saves editable Profile page fields, including avatarUrl, into the
+     * userCenterProfiles document for the current logged-in user.
+     */
     ['displayName', 'role', 'bio', 'avatarUrl'].forEach((fieldName) => {
       if (updates[fieldName] !== undefined) {
         userCenter.profile[fieldName] = updates[fieldName];

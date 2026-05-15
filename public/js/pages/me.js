@@ -2,6 +2,7 @@
  * Added by @Edward
  *
  * Loads the Me page profile summary from the user-center backend API.
+ * Displays the saved profile photo after the Profile page uploads it.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -35,6 +36,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return data;
   }
 
+  /*
+   * Added by @Edward
+   *
+   * Shows the saved avatar on the Me page after it is uploaded from Profile.
+   * If no avatar is saved yet, the profile circle falls back to SS.
+   */
   function renderAvatar(avatarUrl) {
     if (!avatarEl) return;
 

@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 
+/*
+ * Added by @Edward
+ *
+ * Allows profile photos to be stored as compact image data URLs.
+ * The frontend resizes avatars before sending them, so this limit only needs
+ * to fit the processed avatar image instead of the original upload file.
+ */
 const MAX_AVATAR_DATA_URL_LENGTH = 750000;
 
 const profileSchema = new mongoose.Schema(
@@ -22,6 +29,12 @@ const profileSchema = new mongoose.Schema(
       trim: true,
       maxlength: 300,
     },
+    /*
+     * Added by @Edward
+     *
+     * Stores the user's saved profile photo. The Profile page writes this field
+     * through PATCH /api/me/profile after the browser prepares the upload.
+     */
     avatarUrl: {
       type: String,
       default: '',
