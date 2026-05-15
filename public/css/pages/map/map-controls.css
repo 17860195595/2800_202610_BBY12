@@ -1,0 +1,281 @@
+/* map-controls: seed pins, status toast, toggle bar, user/locate/fallback markers（控件） */
+/* -------------------------------------------------------------------------- */
+/* Map spot markers: SVG pin inside Leaflet divIcon */
+/* -------------------------------------------------------------------------- */
+.leaflet-div-icon.map-spot-marker-wrap {
+  border: none;
+  background: transparent;
+}
+
+.map-spot-marker {
+  display: block;
+  line-height: 0;
+  filter: drop-shadow(0 0.125rem 0.25rem rgba(0, 0, 0, 0.28));
+}
+
+.map-spot-marker__svg {
+  display: block;
+  vertical-align: bottom;
+}
+
+.map-spot-marker__pin {
+  fill: var(--primary-green-dark);
+  stroke: #fff;
+  stroke-width: 1.75;
+  paint-order: stroke fill;
+}
+
+.map-spot-marker__dot {
+  fill: #fff;
+  stroke: rgba(13, 74, 45, 0.35);
+  stroke-width: 0.5;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Data status toast (top-right, transient)                                    */
+/* -------------------------------------------------------------------------- */
+.map-data-status {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0rem) + 4.25rem);
+  right: 0.75rem;
+  z-index: 1200;
+  padding: 0.4375rem 0.75rem;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--primary-green-dark, #0d4a2d);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(121, 163, 105, 0.32);
+  border-radius: 999px;
+  box-shadow: 0 0.25rem 0.75rem rgba(13, 74, 45, 0.14);
+  -webkit-backdrop-filter: blur(0.25rem);
+  backdrop-filter: blur(0.25rem);
+  transition: opacity 0.2s ease;
+}
+
+.map-data-status[hidden] {
+  display: none;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Map toggle bar (floating layer switch)                                      */
+/* -------------------------------------------------------------------------- */
+.map-toggle-bar {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(121, 163, 105, 0.32);
+  border-radius: 0.625rem;
+  box-shadow: 0 0.375rem 1rem rgba(13, 74, 45, 0.15);
+  -webkit-backdrop-filter: blur(0.25rem);
+  backdrop-filter: blur(0.25rem);
+  font-family: var(--font);
+  min-width: 11.25rem;
+}
+
+.map-toggle-bar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+}
+
+.map-toggle-bar__label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: rgba(20, 34, 26, 0.62);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.map-toggle-bar__seg .btn {
+  --bs-btn-padding-y: 0.1875rem;
+  --bs-btn-padding-x: 0.625rem;
+  --bs-btn-font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.map-toggle-bar__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-top: 1px solid rgba(121, 163, 105, 0.18);
+  padding-top: 0.5rem;
+}
+
+.map-toggle-bar__switch {
+  margin: 0;
+  padding-left: 2.5rem;
+}
+
+.map-toggle-bar__switch .form-check-input {
+  margin-left: -2.5rem;
+  cursor: pointer;
+}
+
+.map-toggle-bar__switch .form-check-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.map-toggle-bar__switch .form-check-input:checked {
+  background-color: var(--primary-green-dark, #0d4a2d);
+  border-color: var(--primary-green-dark, #0d4a2d);
+}
+
+@media (max-width: 26rem) {
+  .map-toggle-bar {
+    top: 0.5rem;
+    right: 0.5rem;
+    min-width: 10rem;
+    padding: 0.5rem 0.625rem;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* User location: "you are here" blue dot + accuracy ring                      */
+/* -------------------------------------------------------------------------- */
+.leaflet-div-icon.map-user-loc-wrap {
+  background: transparent;
+  border: 0;
+  pointer-events: none;
+}
+
+.map-user-loc {
+  position: relative;
+  width: 22px;
+  height: 22px;
+}
+
+.map-user-loc__dot {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: #1976d2;
+  box-shadow: 0 0 0 2px #fff, 0 1px 3px rgba(13, 64, 110, 0.45);
+}
+
+.map-user-loc__pulse {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: rgba(25, 118, 210, 0.35);
+  animation: mapUserLocPulse 1.8s ease-out infinite;
+  transform-origin: center;
+}
+
+@keyframes mapUserLocPulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-user-loc__pulse {
+    animation: none;
+    opacity: 0.45;
+    transform: scale(1.2);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Locate button (Leaflet control, top-left under the zoom buttons)            */
+/* -------------------------------------------------------------------------- */
+.map-locate-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #fff;
+  border: none;
+  color: var(--primary-green-dark, #0d4a2d);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.map-locate-btn:hover {
+  background: #f4faf6;
+  color: var(--primary-green-dark, #0d4a2d);
+}
+
+.map-locate-btn:focus-visible {
+  outline: 2px solid var(--primary-green-dark, #0d4a2d);
+  outline-offset: 2px;
+}
+
+.map-locate-btn.is-busy {
+  animation: mapLocateBtnBusy 0.9s linear infinite;
+  pointer-events: none;
+  color: #1976d2;
+}
+
+@keyframes mapLocateBtnBusy {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.map-locate-btn__icon {
+  display: block;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-locate-btn.is-busy {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Fallback "default centre" marker (Vancouver) when GPS is blocked          */
+/* -------------------------------------------------------------------------- */
+.leaflet-div-icon.map-fallback-loc-wrap {
+  background: transparent;
+  border: 0;
+}
+
+.map-fallback-loc {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.map-fallback-loc__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(107, 114, 128, 0.55);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.map-fallback-loc__dot {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: #6b7280;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
