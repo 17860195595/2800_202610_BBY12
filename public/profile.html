@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Profile — BBY-12</title>
+    <title>Profile - BBY-12</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,7 +29,7 @@
       role, email, profile photo, and short introduction.
      -->
     <main class="sub-page-shell profile-page">
-      <a href="/me" class="back-link">← Back to Me</a>
+      <a href="/me" class="back-link">&larr; Back to Me</a>
 
       <h1 class="sub-page-title">My Profile</h1>
       <p class="sub-page-subtitle">
@@ -37,29 +37,46 @@
       </p>
 
       <section class="profile-card">
-        <div class="profile-avatar-large">🌳</div>
+        <!--
+          Added by @Edward
+
+          Shows the saved profile photo at the top of the Profile page.
+          JavaScript replaces the default SS text with the database avatar image.
+        -->
+        <div class="profile-avatar-large" id="profileCardAvatar">SS</div>
 
         <div>
-          <h2>Guest User</h2>
-          <p>Developer · ShadeSafe Vancouver</p>
+          <h2 id="profileCardName">Guest User</h2>
+          <p>Developer &middot; ShadeSafe Vancouver</p>
         </div>
       </section>
 
       <section class="sub-card profile-form-card">
         <label class="form-field">
           <span>Name</span>
-          <input type="text" value="Guest User" placeholder="Enter your name" />
+          <input
+            type="text"
+            id="profileDisplayNameInput"
+            value="Guest User"
+            placeholder="Enter your name"
+          />
         </label>
 
         <label class="form-field">
           <span>Role</span>
-          <input type="text" value="Developer" placeholder="Enter your role" />
+          <input
+            type="text"
+            id="profileRoleInput"
+            value="Developer"
+            placeholder="Enter your role"
+          />
         </label>
 
         <label class="form-field">
           <span>Email</span>
           <input
             type="email"
+            id="profileEmailInput"
             value="guest@example.com"
             placeholder="Enter your email"
           />
@@ -68,8 +85,15 @@
         <label class="form-field">
           <span>Profile Photo</span>
 
+          <!--
+            Added by @Edward
+
+            Lets the user choose a local image file for their profile photo.
+            The selected image is previewed here first, then saved when the
+            Save Profile button sends the profile form to the backend.
+          -->
           <div class="avatar-upload-box">
-            <div class="avatar-preview" id="avatarPreview">🌳</div>
+            <div class="avatar-preview" id="avatarPreview">SS</div>
 
             <div class="avatar-upload-content">
               <p>Upload a profile photo</p>
@@ -81,15 +105,24 @@
         <label class="form-field">
           <span>About Me</span>
           <textarea
+            id="profileBioInput"
             rows="4"
             placeholder="Write a short introduction about yourself..."
           ></textarea>
         </label>
 
-        <button type="button" class="primary-btn">Save Profile</button>
+        <button type="button" class="primary-btn" id="saveProfileBtn">
+          Save Profile
+        </button>
+        <!--
+          Added by @Edward
+
+          Gives upload and save feedback, including image processing errors,
+          login-required messages, and successful profile saves.
+        -->
+        <p class="profile-save-status" id="profileSaveStatus" role="status" aria-live="polite"></p>
       </section>
     </main>
-
     <script src="js/components/header.js"></script>
     <script>
       loadAppHeader({ showBack: false });

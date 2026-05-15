@@ -13,15 +13,25 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   color: #fff;
-  background: linear-gradient(135deg, var(--primary-green-dark) 0%, #0d3d26 100%);
-  box-shadow: 0 0.25rem 0.875rem rgba(13, 74, 45, 0.35), 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+  background: linear-gradient(
+    135deg,
+    var(--primary-green-dark) 0%,
+    #0d3d26 100%
+  );
+  box-shadow:
+    0 0.25rem 0.875rem rgba(13, 74, 45, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.2) inset;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.12s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.15s ease;
 }
 
 .map-report-fab:hover {
-  box-shadow: 0 0.35rem 1rem rgba(13, 74, 45, 0.42), 0 1px 0 rgba(255, 255, 255, 0.25) inset;
+  box-shadow:
+    0 0.35rem 1rem rgba(13, 74, 45, 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.25) inset;
 }
 
 .map-report-fab:focus-visible {
@@ -30,6 +40,45 @@
 }
 
 .map-report-fab:active {
+  transform: scale(0.97);
+}
+
+.map-summary-fab {
+  position: fixed;
+  right: 0.75rem;
+  bottom: calc(var(--app-bottom-dock-pad) + 4.5rem);
+  z-index: 1002;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: linear-gradient(135deg, #2b7d4e 0%, #165832 100%);
+  box-shadow:
+    0 0.25rem 0.875rem rgba(13, 74, 45, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.2) inset;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.15s ease;
+}
+
+.map-summary-fab:hover {
+  box-shadow:
+    0 0.35rem 1rem rgba(13, 74, 45, 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.25) inset;
+}
+
+.map-summary-fab:focus-visible {
+  outline: 2px solid var(--primary-green-dark);
+  outline-offset: 3px;
+}
+
+.map-summary-fab:active {
   transform: scale(0.97);
 }
 
@@ -49,7 +98,9 @@ body:has(#map-report-modal.show) > .modal-backdrop {
   background: linear-gradient(180deg, #fbfcfb 0%, var(--bg) 55%, #e8efe9 100%);
   border-radius: var(--radius-lg);
   border: 1px solid rgba(121, 163, 105, 0.24);
-  box-shadow: 0 1rem 2.5rem rgba(13, 74, 45, 0.16), 0 0.25rem 0.75rem rgba(13, 74, 45, 0.08);
+  box-shadow:
+    0 1rem 2.5rem rgba(13, 74, 45, 0.16),
+    0 0.25rem 0.75rem rgba(13, 74, 45, 0.08);
   overflow: hidden;
 }
 
@@ -60,7 +111,11 @@ body:has(#map-report-modal.show) > .modal-backdrop {
   left: 0;
   right: 0;
   height: 0.1875rem;
-  background: linear-gradient(90deg, rgba(121, 163, 105, 0.9) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(121, 163, 105, 0.9) 0%,
+    var(--primary-green-dark) 100%
+  );
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   pointer-events: none;
 }
@@ -122,7 +177,9 @@ body:has(#map-report-modal.show) > .modal-backdrop {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .map-report-radio-row:hover {
@@ -154,8 +211,36 @@ body:has(#map-report-modal.show) > .modal-backdrop {
   min-height: 1.25rem;
 }
 
+.map-report-status--info {
+  color: rgba(20, 34, 26, 0.72);
+}
+
+.map-report-status--error {
+  color: #9c1818;
+}
+
+.map-report-status--success {
+  color: var(--primary-green-dark);
+}
+
+#map-report-modal .map-report-submit-btn.is-busy {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 @media (min-width: 48rem) {
   #map-report-modal .modal-dialog {
     max-width: 24rem;
   }
+}
+
+/* Success toast: above report modal (1220) and toggle bar */
+.map-report-success-toast-wrap {
+  top: calc(env(safe-area-inset-top, 0rem) + 4.25rem);
+  z-index: 1250;
+  max-width: min(22rem, calc(100vw - 1.5rem));
+}
+
+.map-report-success-toast-wrap .toast {
+  min-width: 16rem;
 }

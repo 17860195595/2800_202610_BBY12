@@ -1,0 +1,115 @@
+<!--
+Added by @Markus
+ *
+ * AI chat page that has 2 main sections, the main chat bubble, and the location selection below it.
+ *
+ * AI-generated documentation.
+ * Sprint 3 Popup Challenge.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>AI Chat ShadeSafe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/pages/ai-chat.css" />
+  </head>
+  <body class="has-app-footer">
+    <div id="app-header"></div>
+    <main class="ai-chat-page">
+      <section class="ai-chat-hero">
+        <div class="ai-chat-hero__copy">
+          <button
+            class="ai-hero-close"
+            id="aiHeroClose"
+            aria-label="Close intro"
+          >
+            ×
+          </button>
+          <p class="eyebrow">AI assistant</p>
+          <h1>Ask about Vancouver risk and shade.</h1>
+          <p>
+            Use the selected location from the map or choose one of our key
+            public places. The assistant only answers with risk and guidance for
+            the selected location.
+          </p>
+        </div>
+      </section>
+
+      <section class="ai-chat-grid">
+        <section class="ai-chat-window">
+          <div class="ai-chat-window__header">
+            <p class="ai-chat-window__title">AI Risk Chat</p>
+            <p class="ai-chat-window__meta" id="aiChatMeta">
+              Select a location below the chat to start a conversation!
+            </p>
+          </div>
+          <div
+            id="aiChatMessages"
+            class="ai-chat-messages"
+            aria-live="polite"
+          ></div>
+          <form id="aiChatForm" class="ai-chat-form">
+            <textarea
+              id="aiChatInput"
+              class="ai-chat-form__input"
+              rows="3"
+              placeholder="Ask about heat risk, shade, or outdoor guidance for this location..."
+              required
+            ></textarea>
+            <div class="ai-chat-form__footer">
+              <button type="submit" class="btn btn-primary">Send</button>
+              <button
+                type="button"
+                id="aiResetContext"
+                class="btn btn-outline-secondary">
+                Reset chat
+              </button>
+            </div>
+          </form>
+        </section>
+        <aside class="ai-chat-sidebar">
+          <div class="ai-location-card" id="aiLocationCard">
+            <div class="ai-location-card__label">Selected location</div>
+            <div class="ai-location-card__name" id="aiLocationName">
+              No location selected
+            </div>
+            <p class="ai-location-card__details" id="aiLocationDetails">
+              Pick a location from the map, or choose one of the key locations
+              below.
+            </p>
+          </div>
+          <div class="ai-quick-locations">
+            <div class="ai-quick-locations__header">
+              <h2>Key locations</h2>
+              <p>Tap to load risk details and start the conversation.</p>
+            </div>
+            <div id="aiQuickLocations" class="ai-quick-locations__list"></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/components/header.js"></script>
+    <script src="js/components/footer.js"></script>
+    <script src="js/data/mockMapLocations.js"></script>
+    <script src="js/pages/ai-chat.js"></script>
+    <script>
+      loadAppHeader({ showBack: true, backHref: "/"});
+      loadAppFooter();
+    </script>
+  </body>
+</html>

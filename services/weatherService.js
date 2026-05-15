@@ -41,8 +41,7 @@ async function fetchWeatherData(lat, lng, past_days) {
     const times = [];
 
     for (let i = 0; i < count; i++) {
-
-        const timestamp = start + (i * interval) + utcOffsetSeconds;
+        const timestamp = start + (i * interval);
         times.push(new Date(timestamp * 1000));
     }
 

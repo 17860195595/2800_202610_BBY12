@@ -29,7 +29,121 @@
     <main class="map-page">
       <h1 class="visually-hidden">Map</h1>
       <div id="map" class="map-page__canvas" aria-label="Map centered on Vancouver"></div>
+
+      <!-- Layer toggles: markup here; mapToggleBar.js wires prefs + window events only -->
+      <div id="map-toggle-bar" class="map-toggle-bar" role="region" aria-label="Map layers">
+        <div class="map-toggle-bar__group" role="group" aria-label="Building layer mode">
+          <span class="map-toggle-bar__label">Buildings</span>
+          <div class="btn-group btn-group-sm map-toggle-bar__seg" role="group">
+            <input
+              type="radio"
+              class="btn-check"
+              name="mtb-bld"
+              id="mtb-bld-off"
+              value="off"
+              autocomplete="off"
+            />
+            <label class="btn btn-outline-success" for="mtb-bld-off">Off</label>
+            <input
+              type="radio"
+              class="btn-check"
+              name="mtb-bld"
+              id="mtb-bld-local"
+              value="local"
+              autocomplete="off"
+            />
+            <label class="btn btn-outline-success" for="mtb-bld-local">On</label>
+          </div>
+        </div>
+        <div class="map-toggle-bar__row">
+          <div class="form-check form-switch map-toggle-bar__switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="mtb-fountains" />
+            <label class="form-check-label" for="mtb-fountains">Fountains</label>
+          </div>
+          <div class="form-check form-switch map-toggle-bar__switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="mtb-heat" />
+            <label class="form-check-label" for="mtb-heat">Heat</label>
+          </div>
+        </div>
+      </div>
     </main>
+
+    <div
+      id="map-data-status"
+      class="map-data-status"
+      role="status"
+      aria-live="polite"
+      hidden
+    ></div>
+
+    <!-- Spot detail sheet: shell in HTML; chart + stats from mapSpotDetail*.js -->
+    <div
+      id="map-spot-detail-backdrop"
+      class="map-spot-detail-backdrop"
+      hidden
+      aria-hidden="true"
+    ></div>
+    <aside
+      id="map-spot-detail-panel"
+      class="map-spot-detail-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="map-spot-detail-title"
+      hidden
+      aria-hidden="true"
+    >
+      <header class="map-spot-detail-panel__head">
+        <h2 id="map-spot-detail-title" class="map-spot-detail-panel__title"></h2>
+        <p
+          id="map-spot-detail-risk-tier"
+          class="map-spot-detail-panel__risk-tier map-spot-detail-panel__risk-tier--unknown"
+          aria-live="polite"
+        ></p>
+        <p id="map-spot-detail-time" class="map-spot-detail-panel__time" aria-live="polite"></p>
+        <button
+          type="button"
+          id="map-spot-detail-close"
+          class="map-spot-detail-panel__close"
+          aria-label="Close location details"
+        >
+          ×
+        </button>
+      </header>
+      <div class="map-spot-detail-panel__body">
+        <p id="map-spot-detail-summary" class="map-spot-detail-panel__summary mb-0"></p>
+        <button type="button" id="map-spot-detail-ai-chat" class="map-spot-detail-panel__ai-chat">
+          Ask AI about this place
+        </button>
+        <div
+          id="map-spot-detail-state"
+          class="map-spot-detail-panel__state"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+        <button type="button" id="map-spot-detail-retry" class="map-spot-detail-panel__retry" hidden>
+          Retry
+        </button>
+        <dl id="map-spot-detail-stats" class="map-spot-detail-panel__stats mb-0"></dl>
+        <section class="map-spot-detail-chart-section">
+          <h3 class="map-spot-detail-chart-section__title">
+            <span class="map-spot-detail-chart-section__eyebrow">24-hour outlook</span>
+            <span class="map-spot-detail-chart-section__headline">Temperature</span>
+          </h3>
+          <div class="map-spot-detail-chart-well">
+            <div
+              id="map-spot-detail-chart"
+              class="map-spot-detail-chart"
+              role="img"
+              aria-label="Bar chart of temperature by hour; matches the time-of-day control above the tab bar."
+            ></div>
+          </div>
+        </section>
+        <p class="map-spot-detail-panel__note small text-muted text-center mb-0">
+          Live readings from /api/risk for this exact location.
+        </p>
+      </div>
+    </aside>
     <div class="app-bottom-dock">
       <section
         id="map-time-rail"
@@ -103,15 +217,14 @@
               ></button>
             </div>
             <p class="small text-muted mb-0 mt-2 pe-4">
-              Tell us what it feels like on the ground. Data is not saved yet.
+              Tell us what it feels like on the ground — your report drops a pin for everyone else.
             </p>
           </div>
           <div class="modal-body pt-2">
             <div class="map-report-field mb-3">
               <p class="map-report-label">Location</p>
               <p class="map-report-location-hint mb-0" id="map-report-location-hint">
-                This report will use your current position from the device. Location capture is not
-                wired up yet — coordinates will be added later.
+                We try your device location first. If access is blocked, your report is saved at Vancouver city centre — you can still submit.
               </p>
             </div>
             <fieldset class="map-report-field map-report-field--fieldset mb-3" id="map-report-type-fieldset">
@@ -145,6 +258,33 @@
               Submit
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report success: Bootstrap toast (above map modals) -->
+    <div
+      class="toast-container position-fixed end-0 p-3 map-report-success-toast-wrap"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <div
+        id="map-report-success-toast"
+        class="toast align-items-center text-bg-success border-0 shadow"
+        role="alert"
+        data-bs-autohide="true"
+        data-bs-delay="4500"
+      >
+        <div class="d-flex">
+          <div class="toast-body fw-semibold pe-2" id="map-report-success-toast-body">
+            Report submitted successfully.
+          </div>
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
         </div>
       </div>
     </div>
@@ -192,6 +332,23 @@
       </div>
     </div>
 
+    <!-- Cloned by mapSpotDetailRender.js (stats rows + hourly chart); keeps structure out of JS -->
+    <template id="tpl-map-spot-stat-row">
+      <div class="map-spot-detail-panel__row">
+        <dt></dt>
+        <dd></dd>
+      </div>
+    </template>
+    <template id="tpl-map-spot-chart-ticks">
+      <div class="map-spot-detail-chart__ticks" aria-hidden="true"></div>
+    </template>
+    <template id="tpl-map-spot-chart-bar">
+      <button type="button" class="map-spot-detail-chart__bar-wrap">
+        <span class="map-spot-detail-chart__bar"></span>
+        <span class="map-spot-detail-chart__hour"></span>
+      </button>
+    </template>
+
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
     <script>
@@ -210,14 +367,6 @@
     ></script>
     <!-- Leaflet.heat: smooth canvas heatmap (L.heatLayer), spectral-style gradient -->
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-    <script src="js/data/mockMapLocations.js"></script>
-    <script src="js/map/mapUtils.js"></script>
-    <script src="js/map/mapHeat.js"></script>
-    <script src="js/map/mapSpotDetail.js"></script>
-    <script src="js/map/mapReport.js"></script>
-    <script src="js/map/mapMarkers.js"></script>
-    <script src="js/map/mapTimeRail.js"></script>
-    <script src="js/map/mapOnboarding.js"></script>
-    <script src="js/pages/index.js"></script>
+    <script type="module" src="js/pages/index.js"></script>
   </body>
 </html>
