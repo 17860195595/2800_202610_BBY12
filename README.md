@@ -31,7 +31,7 @@ TBA
   The demo includes a working Leaflet map with a `leaflet.heat` overlay, so temperature-like
   intensity data can be rendered as a visual heat layer directly on the map.
   The goal of this prototype is to provide a runnable baseline for interaction, styling, and
-  future integration with real backend/location data while core user features are still in progress.
+  future integration with real backend/location data while core user features are still in progress. Source: https://github.com/Leaflet/Leaflet.heat
 
 - Alerts page layout structure and footer overlap fix were assisted by ChatGPT and modified/integrated by Eric Guo.  
   Source: https://chat.openai.com/
