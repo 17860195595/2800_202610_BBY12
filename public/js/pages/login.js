@@ -33,4 +33,13 @@ document.getElementById('loginButtonID')
         //waits for servers reponse and alerts it on screen
         const data = await res.json();
         alert(data.message);
+
+        if(res.ok)
+        {
+            window.location.href="/index.html";
+        }
+        else
+        {
+            alert(data.message);
+        }
     });

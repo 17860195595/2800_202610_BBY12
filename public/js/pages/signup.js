@@ -36,7 +36,15 @@ document.getElementById('signupButtonID')
 
         //reads servers request when its done and turn it into js object (client revcieves response res)
         const data = await res.json();
-
         //puts alert in page
         alert(data.message);
+        
+        if(res.ok)
+        {
+            window.location.href="/index.html";
+        }
+        else
+        {
+            alert(data.message);
+        }
     });

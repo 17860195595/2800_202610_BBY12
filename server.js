@@ -10,6 +10,7 @@ require('dotenv').config();
 //Encrypting and hashing stuff
 const bcrypt = require('bcrypt');
 const saltRounds = 12;
+const Joi = require('joi');
 
 /**
  * Added by @Markus
@@ -22,6 +23,7 @@ const { getSunPosition } = require("./services/sunAngleService.js");
 const { fetchWeatherData } = require("./services/weatherService.js");
 const { fetchTreeData } = require("./services/treeService.js");
 const { fetchBuildingData } = require("./services/buildingService.js");
+const { fetchWaterFountainData } = require("./services/waterFountainService.js");
 
 //setup express app
 const app = express();
@@ -43,23 +45,6 @@ app.use(express.urlencoded({ extended: true }));
 const healthRouter = require('./routes/health');
 app.use('/api/health', healthRouter);
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, '/public')));
-
-
-
-/**
- * Setup user schema
- * 
- * @author Adam.S
- * @credit I did use chat gpt for the mongoose part because i never done this before
- */
-const userSchema = new mongoose.Schema(
-{
-  username: String,
-  password: String
-})
-const User = mongoose.model('User', userSchema)
 
 /**
  * This is the session middleware.
@@ -78,6 +63,103 @@ app.use(session(
     }
 }));
 
+//Middle ware to check if user is logged in
+function isAuthenticated(req, res, next)
+{
+  //if logged in
+  if(req.session && req.session.user)
+  {
+    next();
+  }
+  //not logged in
+  else
+  {
+    return res.redirect('/login.html');
+  }
+}
+
+
+/**
+ * Added by @Adam
+ * 
+ * This protects from just typing "page.html" in browser.
+ */
+app.use((req, res, next) =>
+{
+  // allow APIs to pass through
+  if (req.path.startsWith('/api'))
+  {
+    return next();
+  }
+
+  // allow login + signup pages always
+  const publicPages = ['/login.html', '/signup.html'];
+
+  if (publicPages.includes(req.path))
+  {
+    return next();
+  }
+
+  // block ALL other html files unless logged in
+  if (req.path.endsWith('.html'))
+  {
+    if (req.session && req.session.user)
+    {
+      return next();
+    }
+
+    return res.redirect('/login.html');
+  }
+
+  if (req.path === '/index.html')
+{
+  if (req.session && req.session.user)
+  {
+    return next();
+  }
+
+  return res.redirect('/login.html');
+}
+
+  next();
+});
+
+
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, '/public')));
+
+
+/**
+ * Setup user schema
+ * 
+ * @author Adam.S
+ * @credit I did use chat gpt for the mongoose part because i never done this before
+ */
+const userSchema = new mongoose.Schema(
+{
+  username: String,
+  password: String,
+  userFirstLog: { type: Number, default: 0 } 
+});
+const User = mongoose.model('User', userSchema);
+
+/**
+ * added by @Adam
+ * 
+ * Joi validation schemas
+ */
+const signupSchema = Joi.object(
+{
+  username: Joi.string().min(3).max(20).required(),
+  password: Joi.string().min(6).max(20).required()
+});
+
+const loginSchema = Joi.object(
+{
+  username: Joi.string().required(),
+  password: Joi.string().required()
+});
+
 
 /**
  * Added by @Adam
@@ -85,10 +167,11 @@ app.use(session(
  * Hey guys i did this just so the server can 
  * start so that way it has a default route.
  */
-app.get("/", (req, res) => 
+app.get('/', isAuthenticated, (req, res) => 
 {
-  res.sendFile(path.join(__dirname, '/public/index.html'));
+  res.redirect('/index.html')
 });
+
 
 /**
  * Added by @Adam
@@ -103,6 +186,18 @@ app.get("/login", (req, res) =>
 
 
 /**
+ * Added by @Adam
+ * 
+ * I did this just so i can test and see 
+ * the signup page i am working on.
+ */
+app.get("/signup", (req, res) => 
+{
+  res.sendFile(path.join(__dirname, '/public/signup.html'));
+});
+
+
+/**
  * the post function handler for signup.
  * It takes in req object from client side js.
  * 
@@ -110,7 +205,18 @@ app.get("/login", (req, res) =>
  */
 app.post('/login', async (req, res) => 
 {
-  console.log(req.body);//for testing
+  //takes only error property in the object
+  const {error} = loginSchema.validate(req.body);
+
+  if(error)
+  {
+    //first error, and 400 = bad request
+    return res.status(400).json(
+    {
+      message: error.details[0].message
+    })
+  }
+
   const username = req.body.username;
   const password = req.body.password;
 
@@ -142,23 +248,15 @@ app.post('/login', async (req, res) =>
     username: user.username
   };
 
+  //make it know user has logged in more than once
+  user.userFirstLog = 1;
+  await user.save()
+
   //send res to client 
   res.json(
   {
     message: 'Login sucessfull'
   })
-});
-
-
-/**
- * Added by @Adam
- * 
- * I did this just so i can test and see 
- * the signup page i am working on.
- */
-app.get("/signup", (req, res) => 
-{
-  res.sendFile(path.join(__dirname, '/public/signup.html'));
 });
 
 
@@ -170,9 +268,22 @@ app.get("/signup", (req, res) =>
  */
 app.post('/signup', async (req, res) => 
 {
-  console.log(req.body);//for testing
+  //takes only error property in the object
+  const {error} = signupSchema.validate(req.body);
+
+  if(error)
+  {
+    //first error, and 400 = bad request
+    return res.status(400).json(
+    {
+      message: error.details[0].message
+    })
+  }
+
+
   const username = req.body.username;
   const password = req.body.password;
+  const userFirstLog = 0;
 
   const existingUser = await User.findOne({ username });
 
@@ -191,17 +302,23 @@ app.post('/signup', async (req, res) =>
   const newUser = new User(
   {
     username,
-    password: hashedPassy
+    password: hashedPassy,
+    userFirstLog: 0
   });
 
   //save sends to mongo dv
   await newUser.save();
+
+  //get username from DB and make session user = to that
+  req.session.user = 
+  {
+    username: newUser.username
+  };
     
   //res.json sends back json object back to client response
   res.json({
     message: 'Signup sucessfull'
   });
-
 });
 
 
@@ -211,14 +328,35 @@ app.post('/signup', async (req, res) =>
  * I did this just so i can test and see 
  * the analytics page i am working on.
  */
-app.get("/analytics", (req, res) => {
+app.get("/analytics", isAuthenticated, (req, res) => 
+{
   res.sendFile(path.join(__dirname, '/public/analytics.html'));
 });
 
+/**
+ * Added by @Edward
+ *
+ * Adds routes for the Me, Profile, Settings, and About pages.
+ * These pages support the user profile/settings flow from the Me page.
+ */
 
+app.get("/about", isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/about.html"));
+});
+app.get("/me", isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/me.html"));
+});
 
+app.get("/settings", isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/settings.html"));
+});
 
-app.get("/alert", (req, res) => {
+app.get("/profile", isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/profile.html"));
+});
+
+app.get("/alert", isAuthenticated, (req, res) => 
+{
   res.sendFile(path.join(__dirname, "/public/alert.html"));
 });
 
@@ -233,7 +371,7 @@ app.get("/alert", (req, res) => {
  * result[2] = weather/risk data for oldest day
  * result[last index] = weather/risk data for current day 
  */
-app.get("/api/risk", async (req, res) => {
+app.get("/api/risk", isAuthenticated, async (req, res) => {
   try {
     const lat = req.query.lat;
     const lng = req.query.lng;
@@ -299,7 +437,7 @@ app.get("/api/risk", async (req, res) => {
  * fetches all water fountain locations in the city of vancouver, there are around 250 water fountains total
  * we can probably just save this data in the database but for now we will just have this fetch
  */
-app.get("/api/fountains", async (req, res) => {
+app.get("/api/fountains", isAuthenticated, async (req, res) => {
   try {
     const fountains = await fetchWaterFountainData();
     res.json(fountains);
@@ -310,28 +448,31 @@ app.get("/api/fountains", async (req, res) => {
   }
 });
 
+
 /**
- * Added by @Edward
- *
- * Adds routes for the Me, Profile, Settings, and About pages.
- * These pages support the user profile/settings flow from the Me page.
+ * Added by @Adam
+ * 
+ * Logout route. Destroys sessiona and clears cookie and redirects back to login page.
  */
+app.get('/logout', (req, res) => 
+{
+  req.session.destroy();
 
-app.get("/about", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/about.html"));
-});
-app.get("/me", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/me.html"));
-});
-
-app.get("/settings", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/settings.html"));
+  //Deletes the cookie that express session makes from browser.
+  res.clearCookie('connect.sid');
+  res.redirect('/login.html')
 });
 
-app.get("/profile", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/profile.html"));
+/**
+ * Added by @Adam
+ * 
+ * Page not found route.
+ */
+app.use( (req, res) =>
+{
+    res.status(404);
+    res.send("404 Page not found :(");
 });
-
 
 (async function start() 
 {

@@ -24,9 +24,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
-    "openmeteo": "^1.2.3",
     "express-session": "^1.19.0",
+    "joi": "^18.2.1",
     "mongoose": "^8.23.1",
+    "openmeteo": "^1.2.3",
     "suncalc": "^1.9.0"
   },
   "devDependencies": {
