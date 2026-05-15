@@ -16,26 +16,19 @@
  * are static identity rows; their heat-layer numbers are mock-synthesized in
  * mockMapLocations.js so we keep spatial variation without any API traffic.
  *
- * Public API (attached to window):
- *   fetchSpotRiskData(spot)             → Promise<{ hourly24, trees, buildings, raw }>
- *   ensureSpotApiData(spot)             → Promise<spot> (per-spot cached on demand)
- *   fetchAllFountains()                 → Promise<Array<{ lat, lng, location }>>
- *   fetchWeatherGrid()                  → Promise<Array<{ lat, lng, hourly24 }>>
+ * ES module exports (map page imports from services/mapApi.js).
  *
  * @author Jiahao
  */
 
-(function (global) {
-    "use strict";
-
-    /**
-     * Map a numeric UV index to a coarse label. Mirrors mockMapLocations.js so
-     * the detail panel keeps the same vocabulary regardless of data source.
-     * @param {number} uv
-     * @returns {string}
-     * @author Jiahao
-     */
-    function uvLevelFromIndex(uv) {
+/**
+ * Map a numeric UV index to a coarse label. Mirrors mockMapLocations.js so
+ * the detail panel keeps the same vocabulary regardless of data source.
+ * @param {number} uv
+ * @returns {string}
+ * @author Jiahao
+ */
+function uvLevelFromIndex(uv) {
         if (typeof uv !== "number" || isNaN(uv)) return "—";
         if (uv <= 0) return "None";
         if (uv < 3) return "Low";
@@ -103,7 +96,7 @@
 
     /**
      * Convert one backend hourly entry into our internal "spot snapshot" shape
-     * used by mapHeat.js / mapSpotDetail.js. Keeps fields that already exist
+     * used by mapHeat.js / mapSpotDetail*.js. Keeps fields that already exist
      * in the mock so all downstream code keeps working.
      * @param {Object} entry
      * @param {number} hour 0–23
@@ -493,8 +486,4 @@
             });
     }
 
-    global.fetchSpotRiskData = fetchSpotRiskData;
-    global.fetchAllFountains = fetchAllFountains;
-    global.ensureSpotApiData = ensureSpotApiData;
-    global.fetchWeatherGrid = fetchWeatherGrid;
-})(window);
+export { fetchSpotRiskData, fetchAllFountains, ensureSpotApiData, fetchWeatherGrid };

@@ -1,35 +1,12 @@
 /**
  * @file mapMarkers.js
- * Leaflet markers for the map page.
- *
- *   - addMockLocationMarkers(map)         — captures the map reference for
- *                                            later layer creation. Does not
- *                                            place pins itself; renderSeedSpotPins
- *                                            owns Local mode.
- *   - renderSeedSpotPins(map, locations)  — Local mode: renders one green pin
- *                                            per seed location (the 100
- *                                            curated anchors). Each pin opens
- *                                            the detail panel for its own seed.
- *   - addFountainMarkers(map, fountains)  — small blue teardrops from /api/fountains.
- *
- * Click on any pin opens the spot detail panel; mapSpotDetail.js will
- * lazy-fetch /api/risk for that pin's coordinates so the user only ever
- * triggers a backend call when they actually look at a place.
- *
- * The previous "City" mode (every Vancouver building footprint centroid as a
- * clustered pin) was removed — the dataset is slow to fetch and the 100
- * curated seed locations are enough for the use case. Toggle bar now only
- * exposes Off / Local.
- *
+ * Leaflet: seed pins (Local / Off), fountain markers. Clicks open mapSpotDetailPanel (lazy /api/risk).
  * @author Jiahao
  */
 
-/**
- * Build a DivIcon with inline SVG (no extra HTTP request). className clears
- * default leaflet-div-icon border.
- * @returns {L.DivIcon}
- * @author Jiahao
- */
+import { openMapSpotDetail } from "./mapSpotDetailPanel.js";
+import { escapeHtmlMap } from "./mapUtils.js";
+
 function createSpotDivIcon() {
     var w = 36;
     var h = 46;
@@ -53,41 +30,19 @@ function createSpotDivIcon() {
     });
 }
 
-/** Map reference captured during addMockLocationMarkers so the seed / fountain
- *  renderers can attach layers without re-threading the map instance
- *  through every call site. */
+/** @type {L.Map|null} */
 var mapMarkersActiveMap = null;
-/** Layer for the 100 seed-spot pins (Local mode). */
+/** Layer for seed pins (Local). */
 var seedSpotLayerGroup = null;
-/** Singleton layer group for fountain markers. */
+/** Fountain markers. */
 var fountainLayerGroup = null;
-/** Currently-selected building mode: 'off' | 'local'. */
+/** @type {'off'|'local'} */
 var currentBuildingMode = "local";
 
-/**
- * Capture the Leaflet map instance for use by the seed / fountain
- * renderers. Kept under the original name so pages/index.js does not have to
- * change call sites.
- *
- * @param {L.Map} map
- * @author Jiahao
- */
 function addMockLocationMarkers(map) {
     mapMarkersActiveMap = map;
 }
 
-/**
- * Local mode: place one pin on every seed location in MOCK_MAP_LOCATIONS. No
- * /api/risk traffic happens here — clicks on each pin are what trigger the
- * lazy backend fetch (see mapSpotDetail.js → ensureSpotApiData).
- *
- * Idempotent: replaces any prior layer group on every call so a re-render
- * does not pile up duplicate markers.
- *
- * @param {L.Map} [map] Optional; falls back to the captured active map.
- * @param {Array<Object>} locations seed spots from MOCK_MAP_LOCATIONS
- * @author Jiahao
- */
 function renderSeedSpotPins(map, locations) {
     var leafletMap = map || mapMarkersActiveMap;
     if (leafletMap && !mapMarkersActiveMap) {
@@ -137,21 +92,6 @@ function renderSeedSpotPins(map, locations) {
     seedSpotLayerGroup = group;
 }
 
-/**
- * Single source of truth for which pin layer (if any) is on the map. Modes:
- *   'off'   — no pins
- *   'local' — 100 seed spot pins (LayerGroup)
- *
- * The legacy 'city' mode (Vancouver-wide building cluster) was removed; any
- * stale value coming from older persisted prefs is coerced to 'local' so the
- * map is never left blank.
- *
- * Triggered from the floating toggle bar (mapToggleBar.js).
- *
- * @param {'off'|'local'} mode
- * @param {Array<Object>} [locations] seed spots, used when first switching modes
- * @author Jiahao
- */
 function setBuildingsMode(mode, locations) {
     if (mode !== "off" && mode !== "local") {
         mode = "local";
@@ -172,20 +112,6 @@ function setBuildingsMode(mode, locations) {
     }
 }
 
-/**
- * @returns {'off'|'local'}
- * @author Jiahao
- */
-function getBuildingsMode() {
-    return currentBuildingMode;
-}
-
-/**
- * Compact teardrop icon for fountains. Smaller than the location pin and uses
- * a distinct blue palette so it reads as "water" at a glance.
- * @returns {L.DivIcon}
- * @author Jiahao
- */
 function createFountainDivIcon() {
     var w = 22;
     var h = 28;
@@ -209,15 +135,6 @@ function createFountainDivIcon() {
     });
 }
 
-/**
- * Render every drinking-fountain returned by /api/fountains as a small blue
- * teardrop marker. Re-callable: clears any prior layer group before adding new
- * markers so a re-fetch does not double the pins.
- *
- * @param {L.Map} map
- * @param {Array<{ lat: number, lng: number, location: string|null }>} fountains
- * @author Jiahao
- */
 function addFountainMarkers(map, fountains) {
     if (!Array.isArray(fountains) || !fountains.length) {
         return;
@@ -251,7 +168,7 @@ function addFountainMarkers(map, fountains) {
             '<div class="map-fountain-popup">' +
                 '<strong class="map-fountain-popup__title">Drinking fountain</strong>' +
                 '<p class="map-fountain-popup__body">' +
-                escapeFountainText(label) +
+                escapeHtmlMap(label) +
                 "</p>" +
                 "</div>",
             { closeButton: true, autoPan: false }
@@ -260,12 +177,6 @@ function addFountainMarkers(map, fountains) {
     }
 }
 
-/**
- * Show / hide the fountain layer in place. Wired from the toggle bar.
- * No-op until addFountainMarkers has built the layer.
- * @param {boolean} visible
- * @author Jiahao
- */
 function setFountainsVisible(visible) {
     if (!mapMarkersActiveMap || !fountainLayerGroup) return;
     if (visible) {
@@ -277,16 +188,10 @@ function setFountainsVisible(visible) {
     }
 }
 
-/**
- * Tiny escape helper local to the fountain popup.
- * @param {string} s
- * @returns {string}
- * @author Jiahao
- */
-function escapeFountainText(s) {
-    return String(s == null ? "" : s)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-}
+export {
+    addMockLocationMarkers,
+    renderSeedSpotPins,
+    setBuildingsMode,
+    addFountainMarkers,
+    setFountainsVisible,
+};

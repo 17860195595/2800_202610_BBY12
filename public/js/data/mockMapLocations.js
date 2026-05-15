@@ -5,7 +5,7 @@
  * authoritative here. There is intentionally NO hard-coded weather (tempC,
  * uvIndex, humidityPct, windKmh, shadeScore) — those values are fetched on
  * demand from /api/risk only when the user actually clicks a pin (see
- * services/mapApi.js + map/mapSpotDetail.js).
+ * services/mapApi.js + mapSpotDetail*.js).
  *
  * For the heat layer to keep spatial variation across the 100 seeds without
  * touching the API, every spot still gets a synthesized mockHourly[] array
@@ -38,7 +38,7 @@ function mockUvLevelFromIndex(uv) {
  * patterns — even though the seed objects no longer carry hard-coded weather.
  *
  * The detail panel does NOT consume this array; it waits for /api/risk and
- * uses spot.apiHourly instead. See mapSpotDetail.js for the live data path.
+ * uses spot.apiHourly instead. See mapSpotDetailPanel.js for the live data path.
  *
  * @param {Object} spot
  * @returns {Array<Object>}
@@ -353,11 +353,8 @@ var MOCK_MAP_LOCATIONS = [
  * accidentally renders synthetic numbers.
  * @author Jiahao
  */
-(function attachMockHourlyToSpots() {
-    if (typeof MOCK_MAP_LOCATIONS === "undefined" || !Array.isArray(MOCK_MAP_LOCATIONS)) {
-        return;
-    }
-    for (var i = 0; i < MOCK_MAP_LOCATIONS.length; i++) {
-        MOCK_MAP_LOCATIONS[i].mockHourly = buildMockHourlySeries(MOCK_MAP_LOCATIONS[i]);
-    }
-})();
+for (var ai = 0; ai < MOCK_MAP_LOCATIONS.length; ai++) {
+    MOCK_MAP_LOCATIONS[ai].mockHourly = buildMockHourlySeries(MOCK_MAP_LOCATIONS[ai]);
+}
+
+export { buildMockHourlySeries, MOCK_MAP_LOCATIONS };

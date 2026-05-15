@@ -1,29 +1,16 @@
 /**
  * @file mapToggleBar.js
- * Floating switch bar overlaid on the map. Three controls:
- *
- *   Buildings : Off | On              (segmented radio group; "On" maps to
- *                                       the internal 'local' value to keep
- *                                       prefs + downstream code unchanged)
- *   Fountains : on/off                (Bootstrap form-switch)
- *   Heat      : on/off                (Bootstrap form-switch)
- *
- * Pure UI — does not own the layers. Emits CustomEvents on window so
- * pages/index.js (which holds the map + heat controller refs) can wire the
- * actual show/hide:
+ * Floating layer toggles on the map page. Markup lives in index.html (#map-toggle-bar);
+ * this module restores prefs from localStorage, wires change handlers, and emits:
  *
  *   maptoggle:buildings  detail = { mode: 'off'|'local' }
  *   maptoggle:fountains  detail = { visible: boolean }
  *   maptoggle:heat       detail = { visible: boolean }
  *
- * The legacy "City" option (Vancouver-wide building cluster) was removed —
- * the dataset is slow to fetch and the curated 100 key locations are enough.
- *
+ * Map page bootstrap: js/pages/index.js owns the map + layers and listens for those events.
  * @author Jiahao
  */
 
-/** Persisted user preferences live here so a page reload restores the toggle
- *  positions. Keep the schema flat — bumping the version key wipes old prefs. */
 var MAP_TOGGLE_PREFS_KEY = "shadeSafe.mapTogglePrefs.v1";
 
 /** @typedef {{ buildingsMode: 'off'|'local', fountainsOn: boolean, heatOn: boolean }} MapTogglePrefs */
@@ -68,49 +55,12 @@ function saveMapTogglePrefs(prefs) {
 }
 
 /**
- * Build the floating control DOM and attach it to the map page.
- * Idempotent: returns the existing element if one is already on the page.
- * @returns {HTMLElement}
+ * Return the bar root from index.html, or null if the page omitted it.
+ * @returns {HTMLElement|null}
  * @author Jiahao
  */
 function ensureMapToggleBarDom() {
-    var existing = document.getElementById("map-toggle-bar");
-    if (existing) return existing;
-
-    var bar = document.createElement("div");
-    bar.id = "map-toggle-bar";
-    bar.className = "map-toggle-bar";
-    bar.setAttribute("role", "region");
-    bar.setAttribute("aria-label", "Map layers");
-
-    bar.innerHTML =
-        '<div class="map-toggle-bar__group" role="group" aria-label="Building layer mode">' +
-        '  <span class="map-toggle-bar__label">Buildings</span>' +
-        '  <div class="btn-group btn-group-sm map-toggle-bar__seg" role="group">' +
-        '    <input type="radio" class="btn-check" name="mtb-bld" id="mtb-bld-off" value="off" autocomplete="off" />' +
-        '    <label class="btn btn-outline-success" for="mtb-bld-off">Off</label>' +
-        // Internal radio value stays "local" so the buildingsMode pref schema
-        // and downstream setBuildingsMode() keep working unchanged; only the
-        // user-visible label flipped to "On" for clarity now that "Local" is
-        // the only non-Off mode.
-        '    <input type="radio" class="btn-check" name="mtb-bld" id="mtb-bld-local" value="local" autocomplete="off" />' +
-        '    <label class="btn btn-outline-success" for="mtb-bld-local">On</label>' +
-        '  </div>' +
-        '</div>' +
-        '<div class="map-toggle-bar__row">' +
-        '  <div class="form-check form-switch map-toggle-bar__switch">' +
-        '    <input class="form-check-input" type="checkbox" role="switch" id="mtb-fountains" />' +
-        '    <label class="form-check-label" for="mtb-fountains">Fountains</label>' +
-        '  </div>' +
-        '  <div class="form-check form-switch map-toggle-bar__switch">' +
-        '    <input class="form-check-input" type="checkbox" role="switch" id="mtb-heat" />' +
-        '    <label class="form-check-label" for="mtb-heat">Heat</label>' +
-        '  </div>' +
-        '</div>';
-
-    var mountTarget = document.querySelector(".map-page") || document.body;
-    mountTarget.appendChild(bar);
-    return bar;
+    return document.getElementById("map-toggle-bar");
 }
 
 /**
@@ -126,6 +76,10 @@ function ensureMapToggleBarDom() {
 function initMapToggleBar() {
     var bar = ensureMapToggleBarDom();
     var prefs = loadMapTogglePrefs();
+    if (!bar) {
+        console.warn("[mapToggleBar] #map-toggle-bar not found");
+        return prefs;
+    }
 
     var bldRadios = bar.querySelectorAll('input[name="mtb-bld"]');
     for (var i = 0; i < bldRadios.length; i++) {
@@ -192,3 +146,5 @@ function initMapToggleBar() {
 
     return prefs;
 }
+
+export { initMapToggleBar };

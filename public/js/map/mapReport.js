@@ -18,6 +18,10 @@
  * @author Jiahao
  */
 
+import { MAP_PAGE_CENTER } from "./mapConfig.js";
+import { getUserPosition } from "./mapUserLocationGeoloc.js";
+import { createReport } from "../services/reportApi.js";
+
 /** @type {boolean} */
 var mapReportOpen = false;
 
@@ -27,9 +31,9 @@ var mapReportListenersBound = false;
 /** @type {boolean} */
 var mapReportSubmitting = false;
 
-/** Same default centre as pages/index.js MAP_CENTER / mapUserLocation.js */
-var MAP_REPORT_DEFAULT_LAT = 49.2827;
-var MAP_REPORT_DEFAULT_LNG = -123.1207;
+/** Same default centre as mapConfig MAP_PAGE_CENTER / mapUserLocation.js */
+var MAP_REPORT_DEFAULT_LAT = MAP_PAGE_CENTER.lat;
+var MAP_REPORT_DEFAULT_LNG = MAP_PAGE_CENTER.lng;
 
 /**
  * Build a synthetic position object when GPS is unavailable. Pins the
@@ -53,9 +57,6 @@ function mapReportFallbackPosition(reason) {
  * @returns {Promise<{ lat:number, lng:number, accuracy:(number|null), fetchedAt:number, isFallback?:boolean, fallbackReason?:string }>}
  */
 function mapReportResolvePosition() {
-    if (typeof getUserPosition !== "function") {
-        return Promise.resolve(mapReportFallbackPosition("unsupported"));
-    }
     return getUserPosition({ force: false }).catch(function (err) {
         var kind = err && err.kind ? err.kind : "unknown";
         return mapReportFallbackPosition(kind);
@@ -335,3 +336,5 @@ function initMapReport() {
         }
     }
 }
+
+export { initMapReport, closeMapReportIfOpen };
