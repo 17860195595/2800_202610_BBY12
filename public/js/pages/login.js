@@ -34,6 +34,7 @@ document.getElementById('loginButtonID')
         const data = await res.json();
         alert(data.message);
 
+
         if(res.ok)
         {
             window.location.href="/index.html";
@@ -43,3 +44,7 @@ document.getElementById('loginButtonID')
             alert(data.message);
         }
     });
+
+     
+
+

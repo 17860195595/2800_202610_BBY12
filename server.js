@@ -41,16 +41,36 @@ const AI_API_BASE = "https://api.clod.io/v1";
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+/*
+ * Added by @Edward
+ *
+ * Gives the Profile page enough JSON body space to save a resized avatar
+ * data URL together with the user's profile information.
+ */
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 //setup routes
 const healthRouter = require("./routes/health");
 app.use("/api/health", healthRouter);
 
+
 // User-submitted "what does it feel like here" reports (Mongo-backed).
 const reportsRouter = require('./routes/reports');
 app.use('/api/reports', reportsRouter);
+
+/*
+ * Added by @Edward
+ *
+ * Loads the user-center API used by the Me and Profile pages for profile
+ * fields, settings, and saved profile photos.
+ */
+const userCenterRouter = require('./routes/userCenter');
+
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, '/public')));
+
 
 
 /**
@@ -84,6 +104,14 @@ function isAuthenticated(req, res, next)
     return res.redirect('/login.html');
   }
 }
+
+/*
+ * Added by @Edward
+ *
+ * Mounts user-center routes after session middleware so avatar/profile saves
+ * always use the currently logged-in user's session.
+ */
+app.use('/api/me', userCenterRouter);
 
 
 /**

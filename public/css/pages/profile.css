@@ -16,6 +16,12 @@
   box-shadow: 0 0.375rem 1.125rem rgba(0, 0, 0, 0.08);
 }
 
+/*
+ * Added by @Edward
+ *
+ * Keeps the profile-card avatar in a fixed circular frame.
+ * This prevents uploaded photos from expanding outside the card.
+ */
 .profile-avatar-large {
   width: 4.25rem;
   height: 4.25rem;
@@ -25,7 +31,20 @@
   align-items: center;
   justify-content: center;
   font-size: 2rem;
-  flex-shrink: 0;
+  flex: 0 0 4.25rem;
+  overflow: hidden;
+}
+
+/*
+ * Added by @Edward
+ *
+ * Crops the saved profile photo to fill the circular avatar frame.
+ */
+.profile-avatar-large img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 .profile-card h2 {
@@ -79,7 +98,8 @@
 }
 
 .form-field input:focus,
-.form-field select:focus {
+.form-field select:focus,
+.form-field textarea:focus {
   outline: 0.125rem solid #a8c99b;
   border-color: #7aa66d;
 }
@@ -94,6 +114,11 @@
   padding: 1rem;
 }
 
+/*
+ * Added by @Edward
+ *
+ * Keeps the selected upload preview in a fixed circular frame before save.
+ */
 .avatar-preview {
   width: 4rem;
   height: 4rem;
@@ -103,18 +128,25 @@
   align-items: center;
   justify-content: center;
   font-size: 1.8rem;
-  flex-shrink: 0;
+  flex: 0 0 4rem;
   overflow: hidden;
 }
 
+/*
+ * Added by @Edward
+ *
+ * Crops the local upload preview the same way as the saved avatar.
+ */
 .avatar-preview img {
   width: 100%;
   height: 100%;
+  display: block;
   object-fit: cover;
 }
 
 .avatar-upload-content {
   flex: 1;
+  min-width: 0;
 }
 
 .avatar-upload-content p {
@@ -128,4 +160,22 @@
   border: none;
   background-color: transparent;
   font-size: 0.85rem;
+  max-width: 100%;
+}
+
+.profile-save-status {
+  min-height: 1.25rem;
+  margin: -0.25rem 0 0;
+  color: #4e5f4e;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.profile-save-status[data-state="error"] {
+  color: #a6402d;
+}
+
+.primary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
